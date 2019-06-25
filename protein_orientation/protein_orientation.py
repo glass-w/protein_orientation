@@ -16,8 +16,6 @@ import sys
 import scipy
 from scipy.spatial.transform import Rotation as R
 
-
-
 # Print Versions
 
 print("MDAnalysis version: ", mda.__version__)
@@ -25,20 +23,17 @@ print("NumPy version: ", np.__version__)
 print("SciPy version: ", scipy.__version__)
 print("Pandas version: ", pd.__version__)
 
-
-
 #cython modules
 #from dir_angle_new import dir_angle_new as dir_angle
 
 scale_factor = 20 # for drawing the vectors if needed
-cut_off = 5
+cut_off = 5 # dor protein - lipid interactions 
 
 def get_universe(gro_file, traj_file):
 
-    u = mda.Universe(gro_file, traj_file)
+    ''' Load an MDAnalysis universe '''
 
-    #testing
-    #u.transfer_to_memory()
+    u = mda.Universe(gro_file, traj_file)
 
     return u
 
@@ -49,8 +44,10 @@ def get_principal_axes(universe, selection):
     # https://stackoverflow.com/questions/49239475/
     # how-to-use-mdanalysis-to-principal-axes-and-moment-of-inertia-with-a-group-of-at/49268247#49268247
 
+    # select alpha carbons only
     CA = universe.select_atoms(selection)
 
+    # calculate moment of inertia, and sort eigenvectors
     I = CA.moment_of_inertia()
 
     # UT = CA.principal_axes()
@@ -60,26 +57,27 @@ def get_principal_axes(universe, selection):
     indices = np.argsort(values)
     U = evecs[:, indices]
 
+    # testing
     # Lambda = U.T.dot(I.dot(U))
     #
     # print(Lambda)
     # print(np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0))
 
-    # TODO: Need to ensure that the z vector of the system is orientated correctly. (not exactly a prob with code)
-
-    print("")
-    print(U)
+    #print("")
+    #print(U)
 
     return U
 
 
 def get_com(universe, selection):
 
+    ''' Return the centre of mass of a selection string '''
+
     com = universe.select_atoms(selection).center_of_mass()
 
     return com
 
-
+# not needed anymore?
 def dir_angle(v1, v2):
 
     # Calculate the direction cosine angle (see here for more info: https://en.wikipedia.org/wiki/Direction_cosine)
@@ -88,20 +86,32 @@ def dir_angle(v1, v2):
 
     return direction_cosine_angle
 
+
 def dir_cosine(v1, v2):
 
-    # Calculate the direction cosine (see here for more info: https://en.wikipedia.org/wiki/Direction_cosine)
+    ''' 
+    Given two vectors (v1 and v2) work out the direction cosine between
+    them. For more information see: https://en.wikipedia.org/wiki/Direction_cosine)
+    '''
 
     direction_cosine = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
     return direction_cosine
 
+
 def make_direction_cosine_matrix(ref, axes_set):
 
+    '''
+    Given a set of two axes (ref and axes_set) work out the direction cosine matrix
+    between them.
+    '''
+
+    # unit vectors, take this as the reference set (i.e. the first set of PAs at the first frame)
     ex = ref[0, :]
     ey = ref[1, :]
     ez = ref[2, :]
 
+    # principal axes calcualted at this instance
     u = axes_set[0, :] # 1st PA
     v = axes_set[1, :] # 2nd PA
     w = axes_set[2, :] # 3rd PA
@@ -122,14 +132,10 @@ def make_direction_cosine_matrix(ref, axes_set):
     w_gamma = dir_cosine(w, ez)
 
     # make all of the above into a 3 X 3 matrix and return it
-    # c_matrix = np.matrix([[u_alpha, u_beta, u_gamma],
-    #                       [v_alpha, v_beta, v_gamma],
-    #                       [w_alpha, w_beta, w_gamma]])
-
-    # make all of the above into a 3 X 3 matrix and return it
     c_matrix = np.matrix([[u_alpha, u_beta, u_gamma],
                           [v_alpha, v_beta, v_gamma],
                           [w_alpha, w_beta, w_gamma]])
+                          
 
     return c_matrix
 
@@ -257,7 +263,7 @@ def vis_axes(vis, axes_data, center, name):
 
         print("\nThird principal axis (in blue)")
 
-
+# cast_check() is not needed anymore using Euler angle formalism?
 def cast_check(angle, measurement, vector, pitch_plane, roll_plane):
 
     '''Takes an angle and works out the sign of that angle in each quadrant'''
@@ -502,48 +508,34 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
 
     print("Here we go!")
 
+    # find the residues the user specified for the pitch, roll, and yaw
+    # these are used to make sure the principal axes vectors calculated 
+    # are always pointing in the right direction.
     user_resid_pitch_sel = vector_sel_resids.split(',')[0]
     user_resid_roll_sel = vector_sel_resids.split(',')[1]
     user_resid_yaw_sel = vector_sel_resids.split(',')[2]
 
+    # sort out names for files
     path_name = str(xtc_files[run]).split()[-1].split('.')[-2]
 
     output_file_name = path_name.split()[-1].split('/')[-1]
 
-    # sel_resids = ' or resid '.join(map(str, chain_info['chain 0']['resids']))
-    #
-    # sel = "name CA and (resid " + str(sel_resids) + ")"
-    #
-    # # Before we run through the trajectory
-    #
-    # prev_axis1 = list(u.select_atoms("resid 102 and name CA").atoms.positions[0] - u.select_atoms(sel).center_of_mass())
-    #
-    # prev_axis2 = list(u.select_atoms("resid 69 and name CA").atoms.positions[0] - u.select_atoms(sel).center_of_mass())
-    #
-    # # normalise
-    # prev_axis1 = prev_axis1 / np.linalg.norm(prev_axis1)
-    # prev_axis2 = prev_axis2 / np.linalg.norm(prev_axis2)
-    #
-    #
-    # prev_angle1 = np.arccos(np.dot(np.abs(prev_axis1), [1, 0, 0]) / np.linalg.norm(prev_axis1)) # angle b/w PA1 and x axis
-    #
-    # # prev_angle1 = cast_check(prev_angle1, 'pitch', prev_axis1)
-    #
-    # prev_angle2 = np.arccos(np.dot(np.abs(prev_axis2), [0, 1, 0]) / np.linalg.norm(prev_axis2))  # angle b/w PA2 and y axis
-    #
-    # # prev_angle2 = cast_check(prev_angle2, 'roll', prev_axis2)
-
+    # define the current universe, this is accessed in a for loop. 
     u = mda.Universe(universe_files[run][0], universe_files[run][1])
 
+    # initialise states dictionary - maybe run with if statement?
     states_dict = {'system ' + str(run): {'frame': [], 'pitch': [], 'contact': []}}
 
-
+    # Go through the current run
     for i, ts in enumerate(u.trajectory[::skip_val]):
 
+        # Show progress
         print("Frame = ", ts.frame, ", time = ", ts.time / 1000)
         print("")
 
         # At each frame calculate the angle that each chain has moved through
+        # here, chain means protein copy... need to change this.
+
         # TODO: Test on multiple chains, so far have only tested on one chain
 
         for chain in chain_info:
@@ -554,168 +546,118 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
 
             sel = "name CA and (resid " + str(sel_resids) + ")"
 
+            # Define vectors - drawn from centre of mass of body to the resid chosen
+            
+            # Define the initial pitch vector based on the users choice
             user_ax1 = list(
                 u.select_atoms("resid " + str(user_resid_pitch_sel) + " and name CA").atoms.positions[
                     0] - u.select_atoms(sel).center_of_mass())
+
+            # Define the initial roll vector based on the users choice
             user_ax2 = list(
                 u.select_atoms("resid " + str(user_resid_roll_sel) + " and name CA").atoms.positions[
                     0] - u.select_atoms(sel).center_of_mass())
 
+            # Define the initial yaw vector based on the users choice
             user_ax3 = list(
                 u.select_atoms("resid " + str(user_resid_yaw_sel) + " and name CA").atoms.positions[
                     0] - u.select_atoms(sel).center_of_mass())
 
-            # normalise the user vectors as they will not be between 0 & 1
+            # Normalise the user vectors as they will not be between 0 & 1
             user_ax1 = user_ax1 / np.linalg.norm(user_ax1)
             user_ax2 = user_ax2 / np.linalg.norm(user_ax2)
             user_ax3 = user_ax3 / np.linalg.norm(user_ax3)
 
+            #############################
+            #                           # 
+            #   Calculate Euler Angles  #  
+            #                           #
+            #############################
+
+            # if the user has selected a starting set of principal axes to ensure the PAs always point
+            # towards them, use these
             if calc_method == "user_pa":
 
-                if angle_method == 'euler':
+                pa_array = get_principal_axes(u, sel)
 
-                    pa_array = get_principal_axes(u, sel)
+                # Make a row wise version for the direction cosine matrix calculation (see the func for
+                # why this is needed)
+                pa_array_row_wise = pa_array.T
 
-                    # Make a row wise version for the direction cosine matrix calculation (see the func!).
-                    pa_array_row_wise = pa_array.T
+                # Since the way in which the principal axes are calculated in MDAnalysis we need
+                # to check that the principal axes at each frame are pointing in the same direction
+                # as the one specified by the user, if it is then flip it:
 
-                    # Check for inversion w.r.t. the user axes
+                if np.dot(user_ax1, pa_array_row_wise[0, :]) < 0:
 
-                    if np.dot(user_ax1, pa_array_row_wise[0, :]) < 0:
+                    pa_array_row_wise[0, :] = pa_array_row_wise[0, :] * -1
 
-                        pa_array_row_wise[0, :] = pa_array_row_wise[0, :] * -1
+                if np.dot(user_ax2, pa_array_row_wise[1, :]) < 0:
 
-                    if np.dot(user_ax2, pa_array_row_wise[1, :]) < 0:
+                    pa_array_row_wise[1, :] = pa_array_row_wise[1, :] * -1
 
-                        pa_array_row_wise[1, :] = pa_array_row_wise[1, :] * -1
+                if np.dot(user_ax3, pa_array_row_wise[2, :]) < 0:
 
-                    if np.dot(user_ax3, pa_array_row_wise[2, :]) < 0:
+                    pa_array_row_wise[2, :] = pa_array_row_wise[2, :] * -1
 
-                        pa_array_row_wise[2, :] = pa_array_row_wise[2, :] * -1
+                # In the first frame we use this basis as the reference for all others
+                if i == 0: 
+                    ref = pa_array_row_wise
 
+                # Calculate the direction cosine matrix between the current orthonormal basis
+                # and the reference. The reference is taken as the basis calcualted in the first frame.
 
+                dir_cosine_matrix = make_direction_cosine_matrix(ref=ref, axes_set=pa_array_row_wise)
 
+                # Create a rotation object from the direction cosine matrix
+                rotation_obj = R.from_dcm(dir_cosine_matrix.T)
 
+                #euler_angles1 = rotation_obj1.as_euler('xyz', degrees=True) # extrinsic
 
+                # Intrinisic rotation formalism used
+                # Rotate about Z first, then Y, then X. These correspond to Roll, Pitch, and Yaw
+                # (https://en.wikipedia.org/wiki/Euler_angles#Alternative_names)
+                # i.e. going from user defined basis --> current set of orthonormal vectors at current frame.
+                euler_angles_array = rotation_obj.as_euler('ZYX', degrees=True) # intrinsic
 
+                # Store the euler_angles_array so we can keep track of them
+                euler_angle_store.append(euler_angles_array)
 
-                    if i == 0: # in the first frame set this to be the reference basis for all other frames.
-                        ref = pa_array_row_wise
+                #testing
+                # print("reference: ", ref)
+                # print("directional cosine matrix:", dir_cosine_matrix)
+                print("apply rotation to ref: ", rotation_obj.apply(ref))
+                print(" ")
+                #print("apply rotation to ref: ", rotation_obj1.apply(pa_array_row_wise))
+                # print("current basis at frame (row wise): ", pa_array_row_wise)
 
-                        # You can also use the unit vectors, this was mainly used for testing but in principal can be used.
-                        #ref = np.array(([1, 0, 0], [0, 1, 0], [0, 0, 1]))
-
-                    ##### Calculate the direction cosine matrix between the current orthonormal basis and the reference
-                    ##### The reference is taken as the basis calcualted in the first frame.
-
-                    dir_cosine_matrix = make_direction_cosine_matrix(ref=ref, axes_set=pa_array_row_wise)
-
-                    rotation_obj1 = R.from_dcm(dir_cosine_matrix.T)
-
-
-                    #euler_angles1 = rotation_obj1.as_euler('xyz', degrees=True) # extrinsic
-
-                    euler_angles1 = rotation_obj1.as_euler('ZYX', degrees=True) # intrinsic
-
-
-                    euler_angle_store.append(euler_angles1)
-
-                    # print("reference: ", ref)
-                    # print("directional cosine matrix:", dir_cosine_matrix)
-                    print("apply rotation to ref: ", rotation_obj1.apply(ref))
-                    #print("apply rotation to ref: ", rotation_obj1.apply(pa_array_row_wise))
-                    # print("current basis at frame (row wise): ", pa_array_row_wise)
-
-                    print("ref basis ", ref)
-                    print("rotated ref ", dir_cosine_matrix @ ref) # '@' used for matrix multiplication
-                    print(" basis at frame: ", pa_array_row_wise)
-
-
-                    print('EULER ANGLES: xyz')
-                    print(euler_angles1)
-                    #print(euler_angles2)
-                    print(' ')
-
-                    ax1 = pa_array_row_wise[0]
-                    ax2 = pa_array_row_wise[1]
-                    ax3 = pa_array_row_wise[2]
+                print("ref basis ", ref)
+                print(" ")
+                print("rotated ref ", dir_cosine_matrix @ ref) # '@' used for matrix multiplication
+                print(" ")
+                print(" basis at frame: ", pa_array_row_wise)
+                print(" ")
 
 
+                print('EULER ANGLES: roll, pitch, yaw')
+                print(euler_angles_array)
+                print(" ")
 
+                ax1 = pa_array_row_wise[0] # i.e. the roll axis
+                ax2 = pa_array_row_wise[1] # i.e. the pitch axis
+                ax3 = pa_array_row_wise[2] # i.e. the yaw axis
 
-
-
-
-
-
-                elif angle_method == 'plane':
-
-                    # PAs returned in row format. i.e. the PAs are the columns of axes. To get the 1st PA: axes[:, 0] etc
-
-                    ax1 = pa_array[:, 0]  # The principal axis, for pitch calc
-                    ax2 = pa_array[:, 1]  # The 2nd principal axis, for roll calc
-                    ax3 = pa_array[:, 2]  # The 3rd principal axis
-
-                    #print("HERE")
-                    #print(pa_array)
-
-                    # Check if the principal axes are pointing in the same direction as the user-defined axes, if they're
-                    # not then invert them
-
-                    if np.dot(user_ax1, ax1) < 0:
-
-                        ax1 = ax1 * -1
-
-                    if np.dot(user_ax2, ax2) < 0:
-
-                        #print("vector pre-flipped:")
-                       # print(user_ax2, ax2)
-
-                       # print("dot prod = ", np.dot(user_ax2, ax2))
-
-                        ax2 = ax2 * -1
-
-                       # print("vector flipped:")
-                       # print(user_ax2, ax2)
-
-                    if np.dot(user_ax3, ax3) < 0:
-
-                        ax3 = ax3 * -1
-
-                    # Measure the angles using a specified plane, may not be the most accurate as the measurement may move
-                    # out of the plane during the simulation.
-                    # Here we only focus on pitch and roll
-
-                    # Measure Pitch (project on to ax1 vs. X)
-                    if p_plane == 'xz' or 'zx':
-                        pa_1_measured_angle = dir_angle(ax1, [1, 0, 0])
-
-                    # Measure Pitch (project on to ax1 vs. Y)
-                    elif p_plane == 'yz' or 'zy':
-                        pa_1_measured_angle = dir_angle(ax1, [0, 1, 0])
-
-                    # Check which quadrant the angle is in and correct for that
-                    pa_1_measured_angle = cast_check(angle=pa_1_measured_angle, measurement='pitch', vector=ax1,
-                                                     pitch_plane=p_plane, roll_plane=r_plane)
-
-                    # Measure Pitch (project on to ax2 vs. Y)
-                    if r_plane == 'yz' or 'zy':
-                        pa_2_measured_angle = dir_angle(ax2, [0, 1, 0])
-
-                    # Measure Pitch (project on to ax2 vs. X)
-                    elif r_plane == 'xz' or 'zx':
-                        pa_2_measured_angle = dir_angle(ax2, [1, 0, 0])
-
-                    # Check which quadrant the angle is in and correct for that
-                    pa_2_measured_angle = cast_check(angle=pa_2_measured_angle, measurement='roll', vector=ax2,
-                                                     pitch_plane=p_plane, roll_plane=r_plane)
-
-            # If the user has defined their own axes there is no need to flip them.
+            # If the user has defined their own axes there is no need to flip them
+            # i.e. at every frame three vectors are drawn from the CoM to the three 
+            # user defined residues (these may not be / probably won't be orthogonal)
             elif calc_method == 'user':
 
                 ax1 = user_ax1
                 ax2 = user_ax2
                 ax3 = user_ax3
+
+                    # TODO
+                    # calculate angles with Euler again? basis may not be orthogonal...
 
             # Check if we want to write out the vectors to a pdb file
             if options.vector_traj == True:
@@ -726,13 +668,9 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
                 # compute geometric center
                 center = np.mean(coord, 0)
 
-                #vis_axes(vis='vmd', axes_data=pa_array, orig_axes=start_axes, center=center)
-
-
                 vis_axes(vis='vmd', axes_data=[ax1, ax2, ax3], center=center, name=output_file_name)
 
-
-
+            #TODO fix this
             if states == True:
 
                 # Calc the contacts
@@ -764,11 +702,9 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
                     chain_info[chain]['angle_pa2'].append((ts.time / 1000, np.rad2deg(pa_2_measured_angle)))
                     # chain_info[chain]['angle_pa3'].append((ts.time / 1000, np.rad2deg(pa_3_measured_angle)))
 
-
-
         # Save to output files
-        np.savetxt(output_file_name + '_pitch_' + str(p_plane) + '.txt', chain_info[chain]['angle_pa1'])
-        np.savetxt(output_file_name + '_roll_' + str(r_plane) + '.txt', chain_info[chain]['angle_pa2'])
+        #np.savetxt(output_file_name + '_pitch_' + str(p_plane) + '.txt', chain_info[chain]['angle_pa1'])
+        #np.savetxt(output_file_name + '_roll_' + str(r_plane) + '.txt', chain_info[chain]['angle_pa2'])
 
         np.save(output_file_name +'_euler_angles.npy', np.array(euler_angle_store))
 
@@ -778,6 +714,8 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
 
 
 def init_parser():
+
+    ''' Gather all of the relevant user information '''
 
     parser = argparse.ArgumentParser(
         description="Calculates the orientation of a user defined region of a protein")
@@ -811,11 +749,13 @@ def init_parser():
                             Options: 'user' 'user_pa'")
 
     parser.add_argument("-res_vector_sel", dest="res_vector_sel", type=str,
-                        help="The resids of the residues to use for the pitch and roll calculation in the form\
-                            A, B")
+                        help="The resids of the residues to use for the roll, pitch, and yaw calculation in the form\
+                            A, B, C.")
 
     parser.add_argument("-stride", dest="stride_file", type=str,
-                        help="the name of the stride file to read, a .txt file")
+                        help="the name of the stride file to read, a .txt file.\
+                            This will be used in combination with the -com_sel selection\
+                                to only choose those residues involved in secondary structure.")
 
     parser.add_argument("-pa_only", dest="pa_single", type=bool,
                         help="If set to True a principal component calculation will be carried out and written to a\
@@ -828,33 +768,20 @@ def init_parser():
     #                          "within 0 and 10 degress of pitch and 20 and 30 degress of roll you'd pass the following:"
     #                          "0, 10, 20, 30.")
 
-    parser.add_argument("-write_states", dest="states_list", type=bool, default=False,
-                        help="a list of states to write out, here we define pitch and roll as states."
-                             "We pass a list of minimum and maximum pitch and roll angles within which the user wants") # 0,10,50,70
-
-    parser.add_argument("-pitch_plane", dest="pitch_plane", type=str, default='xz',
-                        help="What 2D plane to use for the pitch calculation, possible options are 'xz' (== 'zx') or\
-                        'yz' (== 'zy').")
-
-    parser.add_argument("-roll_plane", dest="roll_plane", type=str, default='yz',
-                        help="What 2D plane to use for the roll calculation, possible options are 'xz' (== 'zx') or\
-                        'yz' (== 'zy').")
+    # parser.add_argument("-write_states", dest="states_list", type=bool, default=False,
+    #                     help="a list of states to write out, here we define pitch and roll as states."
+    #                          "We pass a list of minimum and maximum pitch and roll angles within which the user wants")
 
     parser.add_argument("-nprocs", dest="nprocs", type=int, default=1,
-                        help="No. or processes to use, usually set to the number of repeats you have. Max = max No. \
-                             of CPUs available to you")
+                        help="No. or processes to use, usually set to the number of repeats you have.\
+                            Max = max No. of CPUs available to you")
 
-    parser.add_argument("-angle_method", dest="angle_method", type=str, default=1,
+    parser.add_argument("-angle_method", dest="angle_method", type=str, default='euler',
                         help="The method you want to use to calculate the angles, euler or plane")
-
 
     return parser.parse_args()
 
-
-
-
-
-
+#### MAIN #### 
 if __name__ == "__main__":
 
     # Make dictionary of terminal atoms for each residue,
@@ -881,28 +808,28 @@ if __name__ == "__main__":
                       'TYR': 'OH',
                       'TRP': 'CG CD2 CE3 CZ3 CH2 CZ2 CE2 NE1 CD1'}
 
+    # Get the users options
     options = init_parser()
 
+    # Initialise file lists 
     gro_files = []
     xtc_files = []
     systems = []
 
+    # load .gro files from supplied file
     with open(options.gro_file_list, 'r') as f:
         gro_files = f.read().splitlines()
 
-    #print(gro_files)
-
+    # load .xtc files from supplied file
     with open(options.xtc_file_list, 'r') as f:
         xtc_files = f.read().splitlines()
 
-    #print(xtc_files)
 
+    # populate the systems list with each element a .gro and .xtc file
+    # this assumes the list supplied is ordered as sequential repeats. 
     for i in range(len(gro_files)):
 
         systems.append([gro_files[i], xtc_files[i]])
-
-    # systems = list(zip(list(gro_files), list(xtc_files)))
-
 
     # If the user wants to write out different states (i.e. pitch roll etc) initialise the dicts and angles
     if options.states_list == True:
@@ -943,6 +870,8 @@ if __name__ == "__main__":
 
 
 
+    # what is this doing???
+    #######################################################################################################
 
     # Get the start and end of the protein based on the users selection for the centre of mass
     start_of_protein = int(options.com_selection.split()[-1].split(':')[0])
@@ -960,7 +889,7 @@ if __name__ == "__main__":
 
     chain_dict = read_stride(options.stride_file, options.num_of_proteins, int(prot_length), False)
 
-
+    #######################################################################################################
 
 
 
@@ -1002,9 +931,12 @@ if __name__ == "__main__":
     delta = delta / 60.0
     print("Pool Finished in: " + str(delta))
 
-   # print(results)
-  #  print(len(results))
-   # print("")
+  
+  
+  
+  
+  
+   #### BELOW IS ALL TO DO WITH THE STATES CALC ####
 
     # Get the second element of each item in the results list, this corresponds to the "state" information returned by
     # run_traj
@@ -1016,56 +948,11 @@ if __name__ == "__main__":
     for entry in extracted_state_info:
         state_data.update(entry)
 
-  #  print(state_data)
-
-
-
-    # print("Pool Finished in: " + str(delta))
-    #
-    # for i, run in enumerate(systems):
-    #
-    #     print("Analysing Run " + str(i) + "...")
-    #
-    #     # Set the output files to be named after the input xtc / trajectory files
-    #
-    #     #print(options.xtc_file_list[i])
-    #
-    #     path_name = str(xtc_files[i]).split()[-1].split('.')[-2]
-    #     #print(path_name)
-    #
-    #     file_name = path_name.split()[-1].split('/')[-1]
-    #     #print(file_name)
-    #
-    #     # Get the start and end of the protein based on the users selection for the centre of mass
-    #     start_of_protein = int(options.com_selection.split()[-1].split(':')[0])
-    #     end_of_protein = int(options.com_selection.split()[-1].split(':')[1])
-    #
-    #     # Load the universe of current run
-    #     universe = get_universe(systems[i][0], systems[i][1])
-    #
-    #     if i == 0:
-    #         # select the first universe to make resids
-    #         resid_list = universe.select_atoms("protein").residues.resids
-    #
-    #     prot_length = len(universe.select_atoms("resid " + str(start_of_protein) + ":" + str(end_of_protein) + " and name CA"))
-    #
-    #     chain_dict = read_stride(options.stride_file, options.num_of_proteins, int(prot_length), False)
-    #
-    #     chain_data, state_data = run_traj(u=universe, chain_info=chain_dict, skip_val=options.skip,
-    #                                       output_file_name=file_name, calc_method=options.method,
-    #                                       vector_sel_resids=options.res_vector_sel, states=calc_states,
-    #                                       dict_of_states=states_dict, run=i)
-    #
-    # #print("All angles have been calculated!")
-    #
-    # print("END")
-    # print(state_data)
-
-
-
-
-
     df_list = []
+
+
+
+
 
     if calc_states == True:
 
@@ -1186,289 +1073,9 @@ if __name__ == "__main__":
         df.to_pickle('pitch_state_data.pkl')
         df_norm.to_pickle('pitch_state_data_normalised.pkl')
 
-
-
-            #
-            #
-            #
             # for j, pitch_value in enumerate(state_data['system ' + str(i)]):
             #
             #     if min_pitch_list[i] <= pitch_value <= max_pitch_list[i]:
             #
             #         state_dict_range['frames'].append(state_data[run]['frames'])
             #         state_dict_range['frames'].append(state_data[run]['contacts'])
-
-
-
-
-
-### plotting (make into function) ###
-
-# my_cmap = ListedColormap(sns.color_palette())
-#
-# if options.num_of_proteins > 1:
-#
-#     fig, ax = plt.subplots(len(data), sharex=True, sharey=True)
-#
-#
-#     for i, chain in enumerate(data):
-#
-#         # ax[i].scatter(*zip(*data[chain]['angle']), label=str(chain), c=col[i])
-#         # ax[i].legend()
-#
-#         ax[i].scatter(*zip(*data[chain]['angle_pa1']), label=str(chain), c=my_cmap, alpha=0.8)
-#         ax[i].scatter(*zip(*data[chain]['angle_pa2']), label=str(chain), c=my_cmap, alpha=0.8)
-#         ax[i].scatter(*zip(*data[chain]['angle_pa3']), label=str(chain), c=my_cmap, alpha=0.8)
-#         ax[i].legend()
-#
-#     #plt.scatter(*zip(*dat))
-#
-#     # Add titles, legend, and save
-#     #ax.set(title=" ", xlabel="Time (ns)", ylabel="Tilt Angle (" + r'$^{\circ}$' + ")")
-#
-#     fig.text(0.5, 0.04, 'Time (ns)', ha='center')
-#     fig.text(0.04, 0.5, "Angle (" + r'$^{\circ}$' + ")", va='center', rotation='vertical')
-#
-#     plt.savefig('protein_tilt_pa_to_z_all_chains.svg', format='svg')
-#
-#     #plt.show()
-#
-# else:
-#
-#     fig, ax = plt.subplots()
-#
-#     # set the colour palette based on the Seabron colorblind colours
-#     ax.set_prop_cycle('color', sns.color_palette("colorblind", 3))
-#
-#     ax.plot(*zip(*data['chain 0']['angle_pa1']), alpha=0.8, label='princ axis 1 (pitch)')
-#     ax.plot(*zip(*data['chain 0']['angle_pa2']), alpha=0.8, label='princ axis 2 (roll)')
-#     ax.plot(*zip(*data['chain 0']['angle_pa3']), alpha=0.8, label='princ axis 3 (yaw)')
-#     ax.legend()
-#
-#     fig.text(0.5, 0.04, 'Time (ns)', ha='center')
-#     fig.text(0.04, 0.5, "Angle (" + r'$^{\circ}$' + ")", va='center', rotation='vertical')
-#
-#     plt.savefig('protein_tilt_pa_to_z.svg', format='svg')
-
-    #plt.show()
-
-    # fig, ax = plt.subplots()
-    #
-    # # set the colour palette based on the Seabron colorblind colours
-    # ax.set_prop_cycle('color', sns.color_palette("colorblind", 3))
-    #
-    # ax.scatter(*zip(*data['chain 0']['angle_pa1']), alpha=0.8, label='princ axis 1 (pitch)')
-    # ax.scatter(*zip(*data['chain 0']['angle_pa2']), alpha=0.8, label='princ axis 2 (yaw)')
-    # ax.scatter(*zip(*data['chain 0']['angle_pa3']), alpha=0.8, label='princ axis 3 (roll)')
-    # ax.legend()
-    #
-    # fig.text(0.5, 0.04, 'Time (ns)', ha='center')
-    # fig.text(0.04, 0.5, "Angle (" + r'$^{\circ}$' + ")", va='center', rotation='vertical')
-    #
-    # plt.savefig('protein_tilt_pa_to_z_2.svg', format='svg')
-
-
-
-
-
-
-
-
-
-
-
-
-
-# print("COM", get_com(u, sel))
-#
-# #create coordinates array
-# coord = np.array(u.select_atoms(sel).atoms.positions, float)
-#
-# # compute geometric center
-# center = np.mean(coord, 0)
-# print("Coordinates of the geometric center:\n", center)
-#
-# # center with geometric center
-# coord = coord - get_com(u, sel)
-
-
-# def check_argument(arguments):
-#     """
-#     Check if filename passed as argument exists.
-#     Parameters
-#     ----------
-#     arguments : list
-#         list of arguments passed to the script
-#     Returns
-#     -------
-#     string
-#         file name
-#     """
-#     if len(arguments) == 3:
-#         file_name = arguments[1]
-#
-#     elif len(arguments) == 2:
-#         file_name = arguments[1]
-#
-#     else:
-#         message = """
-#         ERROR: missing pdb filename as argument
-#         usage: %s file.pdb""" %(arguments[0])
-#         sys.exit(message)
-#
-#     # check if argument is an existing file
-#     if not os.path.exists(file_name):
-#         sys.exit("ERROR: file %s does not seem to exist" %(file_name))
-#
-#     return file_name
-
-# print(sys.argv)
-# pdb_name = check_argument(sys.argv)
-
-# axes = princ_axes
-# print(axes)
-
-# axes = get_principal_axes(u, sel)
-#
-# axis1 = axes[:,0] # ?
-# axis2 = axes[:,1] # ?
-# axis3 = axes[:,2]
-#
-# # axis1 = ref_princ_axes[0]
-# # axis2 = ref_princ_axes[1]
-# # axis3 = ref_princ_axes[2]
-#
-# print(axis1, axis2, axis3)
-#
-# #--------------------------------------------------------------------------
-# # center axes to the geometric center of the molecule
-# # and rescale them by order of eigen values
-# #--------------------------------------------------------------------------
-# # the large vector is the first principal axis
-# point1 = 3 * scale_factor * axis1 + center
-# # the medium vector is the second principal axis
-# point2 = 2 * scale_factor * axis2 + center
-# # the small vector is the third principal axis
-# point3 = 1 * scale_factor * axis3 + center
-#
-# #--------------------------------------------------------------------------
-# # create .pml script for a nice rendering in Pymol
-# #--------------------------------------------------------------------------
-# #pymol_name = pdb_name.replace(".pdb", "_axes.pml")
-# pymol_name = pdb_name.replace(".pdb", "_axes.pml")
-# with open(pymol_name, "w") as pymol_file:
-#     pymol_file.write(
-#         """
-#         from cgo import *
-#         axis1=  [ BEGIN, LINES, COLOR, 1.0, 0.0, 0.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         axis2=  [ BEGIN, LINES, COLOR, 0.0, 1.0, 0.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         axis3=  [ BEGIN, LINES, COLOR, 0.0, 0.0, 1.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         cmd.load_cgo(axis1, 'axis1')
-#         cmd.load_cgo(axis2, 'axis2')
-#         cmd.load_cgo(axis3, 'axis3')
-#         cmd.set('cgo_line_width', 4)
-#         """ %( \
-#                 center[0], center[1], center[2], point1[0], point1[1], point1[2], \
-#                 center[0], center[1], center[2], point2[0], point2[1], point2[2], \
-#                 center[0], center[1], center[2], point3[0], point3[1], point3[2]))
-#
-# #--------------------------------------------------------------------------
-# # create .pml script for nice rendering in Pymol
-# # output usage
-# #--------------------------------------------------------------------------
-# print("\nFirst principal axis (in red)")
-# # print("coordinates: ", axis1)
-# # print("eigen value: ", eval1)
-#
-# print("\nSecond principal axis (in green)")
-# # print("coordinates:", axis2)
-# # print("eigen value:", eval2)
-#
-# print("\nThird principal axis (in blue)")
-# print("coordinates:", axis3)
-# print("eigen value:", eval3)
-
-#     print("\nYou can view principal axes with PyMOL:")
-# print("pymol %s %s" %(pymol_name, pdb_name))
-
-
-
-
-
-
-
-
-
-
-
-# pdb_name = check_argument(sys.argv)
-#
-# axes_2 = ref_princ_axes
-# print(axes)
-#
-# refaxis1 = axes_2[:,0] # ?
-# refaxis2 = axes_2[:,1] # ?
-# refaxis3 = axes_2[:,2]
-#
-# # axis1 = ref_princ_axes[0]
-# # axis2 = ref_princ_axes[1]
-# # axis3 = ref_princ_axes[2]
-#
-# print(refaxis1, refaxis2, refaxis3)
-#
-# #--------------------------------------------------------------------------
-# # center axes to the geometric center of the molecule
-# # and rescale them by order of eigen values
-# #--------------------------------------------------------------------------
-# # the large vector is the first principal axis
-# point1 = 3 * scale_factor * refaxis1 + center
-# # the medium vector is the second principal axis
-# point2 = 2 * scale_factor * refaxis2 + center
-# # the small vector is the third principal axis
-# point3 = 1 * scale_factor * refaxis3 + center
-#
-# #--------------------------------------------------------------------------
-# # create .pml script for a nice rendering in Pymol
-# #--------------------------------------------------------------------------
-# #pymol_name = pdb_name.replace(".pdb", "_axes.pml")
-# pymol_name = pdb_name.replace(".pdb", "_axes_ref.pml")
-# with open(pymol_name, "w") as pymol_file:
-#     pymol_file.write(
-#         """
-#         from cgo import *
-#         refaxis1=  [ BEGIN, LINES, COLOR, 1.0, 0.0, 0.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         refaxis2=  [ BEGIN, LINES, COLOR, 0.0, 1.0, 0.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         refaxis3=  [ BEGIN, LINES, COLOR, 0.0, 0.0, 1.0, \
-#         VERTEX, %8.3f, %8.3f, %8.3f, VERTEX, %8.3f, %8.3f, %8.3f, END ]
-#         cmd.load_cgo(refaxis1, 'refaxis1')
-#         cmd.load_cgo(refaxis2, 'refaxis2')
-#         cmd.load_cgo(refaxis3, 'refaxis3')
-#         cmd.set('cgo_line_width', 4)
-#         """ %( \
-#                 center[0], center[1], center[2], point1[0], point1[1], point1[2], \
-#                 center[0], center[1], center[2], point2[0], point2[1], point2[2], \
-#                 center[0], center[1], center[2], point3[0], point3[1], point3[2]))
-#
-# #--------------------------------------------------------------------------
-# # create .pml script for nice rendering in Pymol
-# # output usage
-# #--------------------------------------------------------------------------
-# print("\nFirst principal axis (in red)")
-# # print("coordinates: ", axis1)
-# # print("eigen value: ", eval1)
-#
-# print("\nSecond principal axis (in green)")
-# # print("coordinates:", axis2)
-# # print("eigen value:", eval2)
-#
-# print("\nThird principal axis (in blue)")
-# # print("coordinates:", axis3)
-# # print("eigen value:", eval3)
-#
-# #     print("\nYou can view principal axes with PyMOL:")
-# print("pymol %s %s" %(pymol_name, pdb_name))
