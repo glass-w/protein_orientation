@@ -1,0 +1,1 @@
+strand,310helix,alphahelix

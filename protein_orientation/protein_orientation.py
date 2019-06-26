@@ -17,17 +17,13 @@ import scipy
 from scipy.spatial.transform import Rotation as R
 
 # Print Versions
-
 print("MDAnalysis version: ", mda.__version__)
 print("NumPy version: ", np.__version__)
 print("SciPy version: ", scipy.__version__)
 print("Pandas version: ", pd.__version__)
 
-#cython modules
-#from dir_angle_new import dir_angle_new as dir_angle
-
 scale_factor = 20 # for drawing the vectors if needed
-cut_off = 5 # dor protein - lipid interactions 
+cut_off = 5 # for protein - lipid interactions 
 
 def get_universe(gro_file, traj_file):
 
@@ -77,15 +73,6 @@ def get_com(universe, selection):
 
     return com
 
-# not needed anymore?
-def dir_angle(v1, v2):
-
-    # Calculate the direction cosine angle (see here for more info: https://en.wikipedia.org/wiki/Direction_cosine)
-
-    direction_cosine_angle = np.arccos(np.dot(np.abs(v1), v2) / np.linalg.norm(v1))
-
-    return direction_cosine_angle
-
 
 def dir_cosine(v1, v2):
 
@@ -102,19 +89,18 @@ def dir_cosine(v1, v2):
 def make_direction_cosine_matrix(ref, axes_set):
 
     '''
-    Given a set of two axes (ref and axes_set) work out the direction cosine matrix
+    Given a set of two axes (ref_option and axes_set) work out the direction cosine matrix
     between them.
     '''
-
-    # unit vectors, take this as the reference set (i.e. the first set of PAs at the first frame)
+    # Gather the individual vectors of our reference basis
     ex = ref[0, :]
     ey = ref[1, :]
     ez = ref[2, :]
 
-    # principal axes calcualted at this instance
-    u = axes_set[0, :] # 1st PA
-    v = axes_set[1, :] # 2nd PA
-    w = axes_set[2, :] # 3rd PA
+    # principal axes calculated at this instance
+    u = axes_set[0, :] # 1st princpal axis (PA)
+    v = axes_set[1, :] # 2nd princpal axis (PA)
+    w = axes_set[2, :] # 3rd princpal axis (PA)
 
     # Work out the dot prod b/w the 1st PA and the unit vectors
     u_alpha = dir_cosine(u, ex)
@@ -131,52 +117,25 @@ def make_direction_cosine_matrix(ref, axes_set):
     w_beta = dir_cosine(w, ey)
     w_gamma = dir_cosine(w, ez)
 
-    # make all of the above into a 3 X 3 matrix and return it
+    # make all of the above into a 3 X 3 matrix and return it 
     c_matrix = np.matrix([[u_alpha, u_beta, u_gamma],
                           [v_alpha, v_beta, v_gamma],
-                          [w_alpha, w_beta, w_gamma]])
-                          
+                          [w_alpha, w_beta, w_gamma]])                       
 
     return c_matrix
 
-# def make_direction_cosine_matrix(axes_set):
-#
-#     ex = [1, 0, 0]
-#     ey = [0, 1, 0]
-#     ez = [0, 0, 1]
-#
-#     u = axes_set[:, 0] # 1st PA
-#     v = axes_set[:, 1] # 2nd PA
-#     w = axes_set[:, 2] # 3rd PA
-#
-#     # Work out the angle b/w the 1st PA and the unit vectors
-#     u_alpha = dir_angle(u, ex)
-#     u_beta = dir_angle(u, ey)
-#     u_gamma = dir_angle(u, ez)
-#
-#     # Work out the angle b/w the 2nd PA and the unit vectors
-#     v_alpha = dir_angle(v, ex)
-#     v_beta = dir_angle(v, ey)
-#     v_gamma = dir_angle(v, ez)
-#
-#     # Work out the angle b/w the 3rd PA and the unitvectors
-#     w_alpha = dir_angle(w, ex)
-#     w_beta = dir_angle(w, ey)
-#     w_gamma = dir_angle(w, ez)
-#
-#     # make this into a 3 X 3 matrix and return it
-#     c_matrix = np.matrix([[u_alpha, v_alpha, w_alpha],
-#                           [u_beta, v_beta, w_beta],
-#                           [u_gamma, v_gamma, w_gamma]])
-#
-#     return c_matrix
 
 def vis_axes(vis, axes_data, center, name):
 
-    # Select the axes based on the input array
-    # axis1 = axes_data[:, 0]
-    # axis2 = axes_data[:, 1]
-    # axis3 = axes_data[:, 2]
+    ''' 
+    Visualise the principal axes being used for the calculation.
+
+    vis : the format to write the axes out as (either 'vmd' or 'pymol')
+    axes_data :  the array containing the three principal axes
+    center : the geometric center of the users selection
+    name : the name of the .pdb file (based on the supplied .xtc file)
+    '''
+
 
     axis1 = axes_data[0]
     axis2 = axes_data[1]
@@ -263,158 +222,59 @@ def vis_axes(vis, axes_data, center, name):
 
         print("\nThird principal axis (in blue)")
 
-# cast_check() is not needed anymore using Euler angle formalism?
-def cast_check(angle, measurement, vector, pitch_plane, roll_plane):
 
-    '''Takes an angle and works out the sign of that angle in each quadrant'''
-
-    # Check what pitch measurement we want
-    if measurement == 'pitch':
-
-        # Check what plane we want this measurement to be in
-        if pitch_plane == 'zx' or 'xz':
-
-            opp = vector[2] # the opposite is the z coord of the vector
-            adj = vector[0] # the adjacent is the x coord of the vector
-
-        elif pitch_plane == 'zy' or 'yz':
-
-            opp = vector[2]  # the opposite is the z coord of the vector
-            adj = vector[1]  # the adjacent is the y coord of the vector
-
-
-    # Check what roll measurement we want
-    elif measurement == 'roll':
-
-        # Check what plane we want this measurement to be in
-        if roll_plane == 'zy' or 'yz':
-
-            opp = vector[2] # the opposite is the z coord of the vector
-            adj = vector[1] # the opposite is the y coord of the vector
-
-        elif roll_plane == 'zx' or 'xz':
-
-            opp = vector[2]  # the opposite is the z coord of the vector
-            adj = vector[1]  # the opposite is the x coord of the vector
-
-
-    # Calculate the hypotenuse of the triangle defined by the current vector
-
-    hyp = np.sqrt(opp**2 + adj**2)
-
-    # Now calculate the sine, cosine and tangent
-
-    sin_theta = opp / hyp
-    cos_theta = adj / hyp
-    tan_theta = opp / adj
-
-    # We need the values to be positive, to verify we check them against the CAST diagram (below) and adjust the
-    # values accordingly.
-
-    ########## CAST Diagram ##########
-    #                                #
-    #             90 deg             #
-    #               ^                #
-    #               |                #
-    #          S(2) |  A(1)          #
-    #               |                #
-    # 180 deg ------ ------> 360 deg #
-    #               |                #
-    #          T(3) |  C(4)          #
-    #               |                #
-    #            270 deg             #
-    #                                #
-    ##################################
-
-    if sin_theta >= 0 and cos_theta <= 0 and tan_theta <= 0: # in second quadrant, 90 -> 180
-
-        # print(measurement + " in 2nd quad: ", "sin(theta) = ", sin_theta, " cos(theta) = ", cos_theta, " tan(theta) = ",
-        #       tan_theta, " ANGLE = ", np.rad2deg(angle))
-
-        #angle = np.deg2rad(90) + angle
-
-        angle = np.deg2rad(180) - angle
-
-    elif tan_theta >= 0 and cos_theta <= 0 and sin_theta <= 0: # in third quadrant, 180 -> 270
-
-        # print(measurement + " in 3rd quad: ", "sin(theta) = ", sin_theta, " cos(theta) = ", cos_theta, " tan(theta) = ",
-        #       tan_theta, " ANGLE = ", np.rad2deg(angle))
-
-        angle = np.deg2rad(180) + angle
-
-    elif cos_theta >= 0 and tan_theta <= 0 and sin_theta <= 0: # in 4th quadrant, 270 -> 0
-
-        # print(measurement + " in 4th quad: ", "sin(theta) = ", sin_theta, " cos(theta) = ", cos_theta, " tan(theta) = ",
-        #       tan_theta, " ANGLE = ", np.rad2deg(angle))
-
-        #angle = np.deg2rad(270) + angle
-        angle = np.deg2rad(360) - angle
-
-    return angle
-
-
-def read_stride(file, num_prots, chain_length, specific_region):
-    ''' This reads the output from running stride structure.pdb, this is used to identify beta sheets and alpha
+def read_stride(stride_file, num_prots, chain_length, sec_struc_choice):
+    '''
+    This reads the output from running stride structure.pdb, this is used to identify beta sheets and alpha
     helices. Due to flexible loops the calculated principal axes can differ so using more stable regions can give
     less noisy data.
 
-    Prior to this function the user must run "stride file.pdb > stride_file.txt"
-
+    Prior to this function the user must run "stride file.pdb > stride_file.txt" and then use this file for the -stride option.
     '''
 
-    # TODO: work on the specific region option
+    # TODO: work on a specific region option
 
-    x = []
-    ss_list = ['E']#, 'G', 'H', 'I']
+    sec_struc_dict = {'strand': 'E', '310helix' : 'G', 'alphahelix': 'H'}
 
-    ss_list = ['E', 'G'] # strand (E) and 310 helix (G)
-    with open(file) as f:
+    with open(sec_struc_choice, 'r') as ss_file: 
+                        choices = [str(choice).rstrip() for choice in ss_file.readline().split(',')] # rstrip() to remove trailing characters
 
+    resid_list = []
+
+    # make a list of the types of secondary structure to include, this is done by referencing sec_struc_dict to get the one letter code as defined by / in the supplied stride file
+    sec_struc_list = [sec_struc_dict[sec_feature] for sec_feature in choices]
+
+    print(sec_struc_list)
+
+    # Populate resid_list with the list of residues to use for the main calculation - done with reference to the secondary structure (i.e. ignore flexible loop regions)
+    with open(stride_file) as f:
         for line in f.readlines():
 
-            if line.splitlines()[0][0] == 'A':
+            if line.splitlines()[0][0] == 'A': # if at the asignment (ASG) part of the stride file
 
-                if line.splitlines()[0][24] in ss_list:
-                    res = (line.splitlines()[0][12], line.splitlines()[0][13], line.splitlines()[0][14])
-                    x.append(int(''.join(res)))
+                if line.splitlines()[0][24] in sec_struc_list: # Read the one letter code column of the stride file
+                    res = (line.splitlines()[0][12], line.splitlines()[0][13], line.splitlines()[0][14]) # get the resid (only works for up to 999 currently)
+                    resid_list.append(int(''.join(res))) # join them up to make the correct number and append
 
-    #chain_labels = ['A', 'B', 'C']#, 'D', 'E']
-
+    # Make the dictionary with the relevant resids and empty lists to store the Euler angles later for each protein in the system
     chain_dict = {'chain ' + str(i): {'resids': [],
                                       'angle_pa1': [],
                                       'angle_pa2': [],
                                       'angle_pa3': [],
                                       } for i in range(num_prots)}
 
-    print (x)
-    print(len(x))
-    print("HERE")
-    print(num_prots, chain_length)
-
-    print(chain_dict)
 
     for i in range(num_prots):
 
         if i == 0:
 
-            chain_dict['chain ' + str(i)]['resids'] = [t for t in x if 1 <= t <= chain_length]
+            chain_dict['chain ' + str(i)]['resids'] = [t for t in resid_list if 1 <= t <= chain_length]
 
         # Need to test below works on a multi chain system
         else:
 
-            chain_dict['chain ' + str(i)]['resids'] = [t for t in x if
-                                               (i * chain_length) + 1 <= t <= ((i+1) * chain_length)]  # 124 to 246
-
-
-    #chain_dict['chain 1']['resids'] = [t for t in x if 1 <= t <= chain_length] # 1 to 123
-
-    #print(chain_dict)
-
-    #chain_dict['chain 2']['resids'] = [t for t in x if (chain_length + 1) <= t <= (2 * chain_length)] # 124 to 246
-
-    #chain_dict['chain 3']['resids'] = [t for t in x if (1 + (2 * chain_length)) <= t <= (3 * chain_length)] # 247 to 369
-
-    print(chain_dict)
+            chain_dict['chain ' + str(i)]['resids'] = [t for t in resid_list if
+                                               (i * chain_length) + 1 <= t <= ((i+1) * chain_length)]
 
     return chain_dict
 
@@ -501,8 +361,7 @@ def calc_lipid_contacts(universe, cut_off):
         return d
 
 
-def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resids, states, run, cut_off, p_plane,
-             r_plane, angle_method):
+def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resids, states, run, cut_off, ref_option, ref_basis):
 
     euler_angle_store = []
 
@@ -530,8 +389,7 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
     for i, ts in enumerate(u.trajectory[::skip_val]):
 
         # Show progress
-        print("Frame = ", ts.frame, ", time = ", ts.time / 1000)
-        print("")
+        print("Frame = ", ts.frame, ", Time = ", ts.time / 1000, "ns")
 
         # At each frame calculate the angle that each chain has moved through
         # here, chain means protein copy... need to change this.
@@ -600,56 +458,73 @@ def run_traj(universe_files, chain_info, skip_val, calc_method, vector_sel_resid
 
                     pa_array_row_wise[2, :] = pa_array_row_wise[2, :] * -1
 
-                # In the first frame we use this basis as the reference for all others
-                if i == 0: 
-                    ref = pa_array_row_wise
+                ##############################
+                ###  Get reference basis   ###
+                ##############################
 
-                # Calculate the direction cosine matrix between the current orthonormal basis
-                # and the reference. The reference is taken as the basis calcualted in the first frame.
+                if ref_option == 'first_frame':
 
+                    # In the first frame we use this basis as the reference for all others
+                    if i == 0: 
+                        ref = pa_array_row_wise
+
+                elif ref_option == 'user':
+
+                    # read each line of the supplied file, corresponds to each basis vector
+
+                    with open(ref_basis, 'r') as file: 
+                        a = [int(number) for number in file.readline().split(',')] 
+                        b = [int(number) for number in file.readline().split(',')] 
+                        c = [int(number) for number in file.readline().split(',')] 
+
+                    ref = np.array([a, b, c])
+
+                else:
+
+                    # use standard box vectors as reference basis
+                    ref = np.array([[1, 0, 0], [0, 1, 0], [0, 0, 1]])
+
+                ################################
+                ###  Calc DCM and Rot matrix ###
+                ################################
+
+                # Calculate the direction cosine matrix between the current orthonormal basis and the reference
                 dir_cosine_matrix = make_direction_cosine_matrix(ref=ref, axes_set=pa_array_row_wise)
 
                 # Create a rotation object from the direction cosine matrix
                 rotation_obj = R.from_dcm(dir_cosine_matrix.T)
 
-                #euler_angles1 = rotation_obj1.as_euler('xyz', degrees=True) # extrinsic
+                ##############################
+                ### Calculate Euler Angles ###
+                ##############################
 
-                # Intrinisic rotation formalism used
-                # Rotate about Z first, then Y, then X. These correspond to Roll, Pitch, and Yaw
-                # (https://en.wikipedia.org/wiki/Euler_angles#Alternative_names)
-                # i.e. going from user defined basis --> current set of orthonormal vectors at current frame.
-                euler_angles_array = rotation_obj.as_euler('ZYX', degrees=True) # intrinsic
+                # Intrinisic rotation formalism used: Rotate about Z first, then Y', then X''. These correspond to Yaw, Pitch, and Roll (https://en.wikipedia.org/wiki/Euler_angles#Alternative_names)
+                euler_angles_array = rotation_obj.as_euler('ZYX', degrees=True)
 
-                # Store the euler_angles_array so we can keep track of them
+                # Store the euler_angles_array
                 euler_angle_store.append(euler_angles_array)
 
                 #testing
-                # print("reference: ", ref)
-                # print("directional cosine matrix:", dir_cosine_matrix)
-                print("apply rotation to ref: ", rotation_obj.apply(ref))
-                print(" ")
-                #print("apply rotation to ref: ", rotation_obj1.apply(pa_array_row_wise))
-                # print("current basis at frame (row wise): ", pa_array_row_wise)
+                # print("apply rotation to ref: ", rotation_obj.apply(ref))
+                # print(" ")
+                # print("ref basis ", ref)
+                # print(" ")
+                # print("rotated ref ", dir_cosine_matrix @ ref) # '@' used for matrix multiplication
+                # print(" ")
+                # print(" basis at frame: ", pa_array_row_wise)
+                # print(" ")
 
-                print("ref basis ", ref)
-                print(" ")
-                print("rotated ref ", dir_cosine_matrix @ ref) # '@' used for matrix multiplication
-                print(" ")
-                print(" basis at frame: ", pa_array_row_wise)
-                print(" ")
+                # Display calculated angles
+                yaw, pitch, roll = np.round(euler_angles_array[0], 2), np.round(euler_angles_array[1], 2), np.around(euler_angles_array[2], 2)
 
-
-                print('EULER ANGLES: roll, pitch, yaw')
-                print(euler_angles_array)
-                print(" ")
+                print('EULER ANGLES: Yaw = ' + str(yaw) + ', Pitch = ' + str(pitch) + ', Roll = ' + str(roll) + '\n')
 
                 ax1 = pa_array_row_wise[0] # i.e. the roll axis
                 ax2 = pa_array_row_wise[1] # i.e. the pitch axis
                 ax3 = pa_array_row_wise[2] # i.e. the yaw axis
 
             # If the user has defined their own axes there is no need to flip them
-            # i.e. at every frame three vectors are drawn from the CoM to the three 
-            # user defined residues (these may not be / probably won't be orthogonal)
+            # i.e. at every frame three vectors are drawn from the CoM to the three user defined residues (these may not be / probably won't be orthogonal)
             elif calc_method == 'user':
 
                 ax1 = user_ax1
@@ -776,8 +651,22 @@ def init_parser():
                         help="No. or processes to use, usually set to the number of repeats you have.\
                             Max = max No. of CPUs available to you")
 
-    parser.add_argument("-angle_method", dest="angle_method", type=str, default='euler',
-                        help="The method you want to use to calculate the angles, euler or plane")
+    parser.add_argument("-ref_option", dest="ref_option", type=str, default="standard",
+                        help="Choice of what basis of vectors to use as a reference, from which the Euler angles\
+                            will be calcualted. Permitted chocies are: 'first_frame', 'user' or 'standard' \
+                                where standard is x, y, z = [1,0,0], [0,1,0], [0,0,1].")        
+
+    parser.add_argument("-ref_basis", dest="ref_basis", type=str, default=None,
+                        help="The basis vectors to be used as a reference, if not passed the default will be used (see -ref_option).\
+                            This should be a .txt file with the x, y, z coordinates one each line e.g.\
+                                1,0,0\
+                                0,1,0\
+                                0,0,1")  
+
+    parser.add_argument("-sec_struc_choice", dest="sec_struc_choice", default=['strand', '310helix', 'alphahelix'],
+                        help="A file containing the choice of secondary srtucture to use in the calculation of the centre of mass.\
+                            Valid choices include: strand, 310helix, or alphahelix.\
+                                In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
 
     return parser.parse_args()
 
@@ -831,9 +720,11 @@ if __name__ == "__main__":
 
         systems.append([gro_files[i], xtc_files[i]])
 
+    # TODO sort this all out, all to do with the states calc...
+
     # If the user wants to write out different states (i.e. pitch roll etc) initialise the dicts and angles
-    if options.states_list == True:
-        calc_states = True
+    # if options.states_list == True:
+    #     calc_states = True
 
         # states_dict = {'system ' + str(i): {'frame': [], 'pitch': [], 'contact': []} for i in range(len(gro_files))}
 
@@ -856,22 +747,15 @@ if __name__ == "__main__":
         #     else:
         #         angles_to_calc[angle] = float(options.states_list[i])
 
-    elif options.states_list == False:
+    # elif options.states_list == False:
 
-        calc_states = False
+    #     calc_states = False
 
-        states_dict = None
+    #     states_dict = None
 
-
-
-
-
-
-
-
-
-    # what is this doing???
-    #######################################################################################################
+    ######################################################
+    ### Get information about protein(s) in the system ###
+    ######################################################
 
     # Get the start and end of the protein based on the users selection for the centre of mass
     start_of_protein = int(options.com_selection.split()[-1].split(':')[0])
@@ -879,38 +763,26 @@ if __name__ == "__main__":
 
     # Load a temp universe, this is to get resids and protein lengths etc to be used in the main loop
     # We assume that the user is analysing multiple repeats of the SAME system
-    universe = get_universe(systems[0][0], systems[0][1])
-
-    # select the first universe to make resids
-    resid_list = universe.select_atoms("protein").residues.resids
+    temp_universe = get_universe(systems[0][0], systems[0][1])
+    
+    # get resids and length of protein
+    resid_list = temp_universe.select_atoms("protein").residues.resids
 
     prot_length = len(
-        universe.select_atoms("resid " + str(start_of_protein) + ":" + str(end_of_protein) + " and name CA"))
+        temp_universe.select_atoms("resid " + str(start_of_protein) + ":" + str(end_of_protein) + " and name CA"))
 
-    chain_dict = read_stride(options.stride_file, options.num_of_proteins, int(prot_length), False)
+    # Initialise dictionary that holds information for each chain in the system (e.g. x3 subunits - N.B. Assumes subunits are all the SAME)
+    chain_dict = read_stride(stride_file=options.stride_file, num_prots=options.num_of_proteins, chain_length=int(prot_length), sec_struc_choice=options.sec_struc_choice)
 
-    #######################################################################################################
+    #####################
+    ##                 ##
+    ##      RUN        ##    
+    ##                 ##
+    #####################
 
-
-
-
+    # Run analysis - use multiple processes to run each system at the same time
     print("Pool Execution")
     start = time.time()
-
-    # results = Parallel(n_jobs=10,
-    #                    verbose=3,
-    #                    backend="multiprocessing")(
-    #     delayed(run_traj)(universe_files=systems,
-    #                       chain_info=chain_dict,
-    #                       skip_val=options.skip,
-    #                       calc_method=options.method,
-    #                       vector_sel_resids=options.res_vector_sel,
-    #                       states=calc_states,
-    #                       run=i,
-    #                       cut_off=cut_off,
-    #                       p_plane=options.pitch_plane,
-    #                       r_plane=options.roll_plane) for i, system in enumerate(systems))
-
 
     results = Parallel(n_jobs=options.nprocs,
                        verbose=3,
@@ -920,12 +792,11 @@ if __name__ == "__main__":
                           skip_val=options.skip,
                           calc_method=options.method,
                           vector_sel_resids=options.res_vector_sel,
-                          states=calc_states,
+                          states=None,
                           run=i,
                           cut_off=cut_off,
-                          p_plane=options.pitch_plane,
-                          r_plane=options.roll_plane,
-                          angle_method=options.angle_method) for i, system in enumerate(systems))
+                          ref_option=options.ref_option,
+                          ref_basis=options.ref_basis) for i, system in enumerate(systems))
 
     delta = time.time() - start
     delta = delta / 60.0
@@ -937,6 +808,7 @@ if __name__ == "__main__":
   
   
    #### BELOW IS ALL TO DO WITH THE STATES CALC ####
+   # TODO sort this all out, it's a mess.
 
     # Get the second element of each item in the results list, this corresponds to the "state" information returned by
     # run_traj
@@ -954,128 +826,128 @@ if __name__ == "__main__":
 
 
 
-    if calc_states == True:
+    # if calc_states == True:
 
-       # pitch_ranges = [(0, 90), (90, 180), (180, 270), (270, 360)]
+    #    # pitch_ranges = [(0, 90), (90, 180), (180, 270), (270, 360)]
 
-        pitch_ranges = [(-10, 10), (25, 35)]
+    #     pitch_ranges = [(-10, 10), (25, 35)]
 
-        min_pitch_list = [x[0] for x in pitch_ranges]
+    #     min_pitch_list = [x[0] for x in pitch_ranges]
 
-        max_pitch_list = [x[1] for x in pitch_ranges]
+    #     max_pitch_list = [x[1] for x in pitch_ranges]
 
-        dict_of_ranges = {str(k) : {'frames': [], 'contacts': []} for k in pitch_ranges}
+    #     dict_of_ranges = {str(k) : {'frames': [], 'contacts': []} for k in pitch_ranges}
 
-        # Loop over all of the ranges we are interested in
-        for i, range_set in enumerate(dict_of_ranges):
+    #     # Loop over all of the ranges we are interested in
+    #     for i, range_set in enumerate(dict_of_ranges):
 
-            # Loop over every run we have
-            for run in state_data:
-                # i.e. system 0
+    #         # Loop over every run we have
+    #         for run in state_data:
+    #             # i.e. system 0
 
-                # Loop over the pitch values for the current run
-                for j, entry in enumerate(state_data[run]['pitch']):
+    #             # Loop over the pitch values for the current run
+    #             for j, entry in enumerate(state_data[run]['pitch']):
 
-                    if min_pitch_list[i] <= entry <= max_pitch_list[i]:
-                        dict_of_ranges[range_set]['frames'].append(state_data[run]['frame'][j])
-                        dict_of_ranges[range_set]['contacts'].append(state_data[run]['contact'][j])
+    #                 if min_pitch_list[i] <= entry <= max_pitch_list[i]:
+    #                     dict_of_ranges[range_set]['frames'].append(state_data[run]['frame'][j])
+    #                     dict_of_ranges[range_set]['contacts'].append(state_data[run]['contact'][j])
 
-       # print("HELLO")
-      #  print(dict_of_ranges)
+    #    # print("HELLO")
+    #   #  print(dict_of_ranges)
 
-        # Initiate new dict that will store the averaged interactions for each state
-        average_dict_of_ranges = {'state ' + str(pitch_range): [] for pitch_range in pitch_ranges}
-        average_dict_of_ranges_2 = {'state ' + str(pitch_range): [] for pitch_range in pitch_ranges}
+    #     # Initiate new dict that will store the averaged interactions for each state
+    #     average_dict_of_ranges = {'state ' + str(pitch_range): [] for pitch_range in pitch_ranges}
+    #     average_dict_of_ranges_2 = {'state ' + str(pitch_range): [] for pitch_range in pitch_ranges}
 
-        for range_set in dict_of_ranges:
+    #     for range_set in dict_of_ranges:
 
-            # print("Loop over ranges")
-            # print(range_set)
+    #         # print("Loop over ranges")
+    #         # print(range_set)
 
-            sum_state = np.zeros((166,))  # need to generalise this
-            sum_frame = np.zeros((166,))  # need to generalise this
+    #         sum_state = np.zeros((166,))  # need to generalise this
+    #         sum_frame = np.zeros((166,))  # need to generalise this
 
-            for i, contact_array in enumerate(dict_of_ranges[range_set]['contacts']):
+    #         for i, contact_array in enumerate(dict_of_ranges[range_set]['contacts']):
 
-                sum_state += np.sum(contact_array, axis=1)
+    #             sum_state += np.sum(contact_array, axis=1)
 
-            try:  # since some of the angle ranges may not have been visited and the length of frames will be 0
+    #         try:  # since some of the angle ranges may not have been visited and the length of frames will be 0
 
-                sum_state = sum_state / len(dict_of_ranges[range_set]['frames'])
+    #             sum_state = sum_state / len(dict_of_ranges[range_set]['frames'])
 
-            except ValueError:  # if there is no sampling in this range, skip
-                continue
+    #         except ValueError:  # if there is no sampling in this range, skip
+    #             continue
 
-            else:
+    #         else:
 
-                average_dict_of_ranges['state ' + str(range_set)].append(sum_state)
-
-
-
-
-            for i, frame in enumerate(dict_of_ranges[range_set]['frames']):
-
-                sum_frame += np.sum(dict_of_ranges[range_set]['contacts'][i], axis=1)
-
-            # try:
-            #
-            #     sum_frame = sum_state / len(dict_of_ranges[range_set]['frames'])
-            #
-            # except ValueError:
-            #     continue
-            #
-            # else:
-
-                average_dict_of_ranges_2['state ' + str(range_set)].append([frame, sum_frame])
-
-            # print("Averages")
-            # print(average_dict_of_ranges.keys())
-            # print(average_dict_of_ranges)
-
-            # sum_state = pd.DataFrame(np.reshape(sum_state, (166, 1)))
-            #
-            # mask = sum_state.isnull()
-            #
-            # ax = sns.heatmap(sum_state, mask=mask)
-            # ax.set_xlabel('Pitch State ' + str())
-            # ax.set_ylabel('Residue Number')
-            # plt.show()
-
-           # print("HERE3")
-            #print(average_dict_of_ranges)
-
-            df_list.append(pd.DataFrame(average_dict_of_ranges['state ' + str(range_set)]))
-
-           # print(average_dict_of_ranges_2)
-
-        df = pd.concat(df_list)
-
-        # Normalise, take the transpose so that every state is normalised, not every residue
-        # Ref: https://stackoverflow.com/questions/41226744/normalize-data-in-pandas-dataframe
+    #             average_dict_of_ranges['state ' + str(range_set)].append(sum_state)
 
 
 
 
-        df_norm = (df.T - df.T.min()) / (df.T.max() - df.T.min())
+    #         for i, frame in enumerate(dict_of_ranges[range_set]['frames']):
 
-        ax = sns.heatmap(df_norm,  cbar_kws={'label': r'Normalised Average Lipid Distance ($\AA$)'},
-                         xticklabels=average_dict_of_ranges.keys(), cmap='magma')
+    #             sum_frame += np.sum(dict_of_ranges[range_set]['contacts'][i], axis=1)
 
-        ax.set_xlabel('Pitch State')
-        ax.set_ylabel('Residue Number')
-        plt.tight_layout()
+    #         # try:
+    #         #
+    #         #     sum_frame = sum_state / len(dict_of_ranges[range_set]['frames'])
+    #         #
+    #         # except ValueError:
+    #         #     continue
+    #         #
+    #         # else:
 
-        plt.savefig('residue_lipid_interactions_per_pitch_state.svg', dpi=300)
-        plt.show()
+    #             average_dict_of_ranges_2['state ' + str(range_set)].append([frame, sum_frame])
 
-        # Save the Dataframe in the current directroy
+    #         # print("Averages")
+    #         # print(average_dict_of_ranges.keys())
+    #         # print(average_dict_of_ranges)
 
-        df.to_pickle('pitch_state_data.pkl')
-        df_norm.to_pickle('pitch_state_data_normalised.pkl')
+    #         # sum_state = pd.DataFrame(np.reshape(sum_state, (166, 1)))
+    #         #
+    #         # mask = sum_state.isnull()
+    #         #
+    #         # ax = sns.heatmap(sum_state, mask=mask)
+    #         # ax.set_xlabel('Pitch State ' + str())
+    #         # ax.set_ylabel('Residue Number')
+    #         # plt.show()
 
-            # for j, pitch_value in enumerate(state_data['system ' + str(i)]):
-            #
-            #     if min_pitch_list[i] <= pitch_value <= max_pitch_list[i]:
-            #
-            #         state_dict_range['frames'].append(state_data[run]['frames'])
-            #         state_dict_range['frames'].append(state_data[run]['contacts'])
+    #        # print("HERE3")
+    #         #print(average_dict_of_ranges)
+
+    #         df_list.append(pd.DataFrame(average_dict_of_ranges['state ' + str(range_set)]))
+
+    #        # print(average_dict_of_ranges_2)
+
+    #     df = pd.concat(df_list)
+
+    #     # Normalise, take the transpose so that every state is normalised, not every residue
+    #     # Ref: https://stackoverflow.com/questions/41226744/normalize-data-in-pandas-dataframe
+
+
+
+
+    #     df_norm = (df.T - df.T.min()) / (df.T.max() - df.T.min())
+
+    #     ax = sns.heatmap(df_norm,  cbar_kws={'label': r'Normalised Average Lipid Distance ($\AA$)'},
+    #                      xticklabels=average_dict_of_ranges.keys(), cmap='magma')
+
+    #     ax.set_xlabel('Pitch State')
+    #     ax.set_ylabel('Residue Number')
+    #     plt.tight_layout()
+
+    #     plt.savefig('residue_lipid_interactions_per_pitch_state.svg', dpi=300)
+    #     plt.show()
+
+    #     # Save the Dataframe in the current directroy
+
+    #     df.to_pickle('pitch_state_data.pkl')
+    #     df_norm.to_pickle('pitch_state_data_normalised.pkl')
+
+    #         # for j, pitch_value in enumerate(state_data['system ' + str(i)]):
+    #         #
+    #         #     if min_pitch_list[i] <= pitch_value <= max_pitch_list[i]:
+    #         #
+    #         #         state_dict_range['frames'].append(state_data[run]['frames'])
+    #         #         state_dict_range['frames'].append(state_data[run]['contacts'])
