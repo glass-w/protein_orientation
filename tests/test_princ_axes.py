@@ -1,6 +1,11 @@
+import MDAnalysis as mda
+
 from orientation import calc_angles
 
+u = mda.Universe('data/b3_syst_protein_only.gro')
+
 def check_pas():
+
 	# select alpha carbons only
     CA = universe.select_atoms(selection)
 
@@ -14,11 +19,10 @@ def check_pas():
     indices = np.argsort(values)
     U = evecs[:, indices]
 
-    ## Below is for testing ##
-    # Lambda = U.T.dot(I.dot(U))
-    #
-    # print(Lambda)
-    # print(np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0))
+    Lambda = U.T.dot(I.dot(U))
+    
+    print(Lambda)
+    print(np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0))
 
-    #print("")
-    #print(U) 
+    print("")
+    print(U) 
