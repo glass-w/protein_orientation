@@ -15,7 +15,7 @@ install:
 
 
 script:
-    - pytest --cov=./
+    - pytest --cov=./orientation
 
 
 after_success:
