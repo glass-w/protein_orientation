@@ -1,3 +1,5 @@
+import numpy as np
+
 def get_com(universe, selection):
 
     ''' Return the centre of mass of a selection string '''
@@ -5,6 +7,38 @@ def get_com(universe, selection):
     com = universe.select_atoms(selection).center_of_mass()
 
     return com
+
+
+def get_principal_axes(universe, selection):
+
+    # Methodology taken from Beckstein
+    # https://stackoverflow.com/questions/49239475/
+    # how-to-use-mdanalysis-to-principal-axes-and-moment-of-inertia-with-a-group-of-at/49268247#49268247
+
+    # select alpha carbons only
+    CA = universe.select_atoms(selection)
+
+    # calculate moment of inertia, and sort eigenvectors
+    I = CA.moment_of_inertia()
+
+    # UT = CA.principal_axes()
+    # U = UT.T
+
+    values, evecs = np.linalg.eigh(I)
+    indices = np.argsort(values)
+    U = evecs[:, indices]
+
+    ## Below is for testing ##
+    # Lambda = U.T.dot(I.dot(U))
+    #
+    # print(Lambda)
+    # print(np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0))
+
+    #print("")
+    #print(U)
+
+    return U
+
 
 def dir_cosine(v1, v2):
 
@@ -16,6 +50,7 @@ def dir_cosine(v1, v2):
     direction_cosine = np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
 
     return direction_cosine
+
 
 def make_direction_cosine_matrix(ref, axes_set):
 

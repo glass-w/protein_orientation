@@ -1,3 +1,6 @@
+# this module is currently not used by the main script and needs development
+from MDAnalysis.analysis.distances import distance_array as dist
+
 def calc_lipid_contacts(universe, cut_off):
 
         # reset the centre of mass list for each residue

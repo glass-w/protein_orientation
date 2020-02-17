@@ -1,3 +1,5 @@
+from settings import cut_off, scale_factor
+
 def vis_axes(vis, axes_data, center, name):
 
     ''' 

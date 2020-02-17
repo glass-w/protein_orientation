@@ -1,0 +1,19 @@
+language: python
+
+dist: xenial
+
+python:
+    - 3.6
+
+before_install:
+    - python -m pip install --upgrade pip
+
+install:
+    - pip install -r requirements.txt
+
+script:
+    - mypy pynn --ignore-missing-imports
+    - pytest --cov=./
+
+after_success:
+    - codecov
