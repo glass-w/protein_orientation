@@ -2,3 +2,4 @@ MDAnalysis
 numpy
 scipy
 
+pytest
