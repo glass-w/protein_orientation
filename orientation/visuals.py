@@ -1,4 +1,4 @@
-from settings import cut_off, scale_factor
+scale_factor = 20
 
 def vis_axes(vis, axes_data, center, name):
 
