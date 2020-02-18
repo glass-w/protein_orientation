@@ -14,7 +14,7 @@ uni = get_universe(gro_file, traj_file)
 def test_pa():
 
     sel = "name CA and resid 1:123"
-    uni = get_universe('data/b3_syst_protein_only.gro')
+    uni = get_universe(gro_file, traj_file)
     
     CA = uni.select_atoms(sel)
     I = CA.moment_of_inertia()
