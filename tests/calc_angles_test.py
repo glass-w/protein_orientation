@@ -6,7 +6,10 @@ import numpy as np
 import os
 
 sel = "name CA and resid 1:123"
-uni = get_universe(os.path.join(os.getcwd(), "data", "b3_syst_protein_only.gro"))
+gro_file = os.path.join(os.getcwd(), "data", "b3_syst_protein_only.gro")
+traj_file = os.path.join(os.getcwd(), "data", "b3_frm_human_b1_r0_400ns_noPBCWhole_noJump_Center_SKIP10.xtc")
+
+uni = get_universe(gro_file, traj_file)
 
 def test_pa():
 
