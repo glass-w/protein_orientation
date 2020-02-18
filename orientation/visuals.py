@@ -11,7 +11,6 @@ def vis_axes(vis, axes_data, center, name):
     name : the name of the .pdb file (based on the supplied .xtc file)
     '''
 
-
     axis1 = axes_data[0]
     axis2 = axes_data[1]
     axis3 = axes_data[2]
@@ -63,7 +62,7 @@ def vis_axes(vis, axes_data, center, name):
 
         #pymol_name = pdb_name.replace(".pdb", "_axes.pml")
 
-        pymol_name = ("test_axes.pml")
+        pymol_name = (name + "_pa_vectors.pml")
         with open(pymol_name, "w") as pymol_file:
             pymol_file.write(
                 """

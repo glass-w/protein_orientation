@@ -17,3 +17,16 @@ def test_vis_axes_vmd():
     assert filecmp.cmp(ref, current)
     
     os.remove(current)
+
+def test_vis_axes_pymol():
+    
+    # Currently dested output in Pymol 1.4 only!
+
+    vis_axes('pymol', axes_array, c, 'test_pymol')
+
+    ref = os.path.join(os.getcwd(), "data", "test_pymol_pa_vectors.pml")
+    current = os.path.join(os.getcwd(), "", "test_pymol_pa_vectors.pml")
+
+    assert filecmp.cmp(ref, current)
+
+    os.remove(current)
