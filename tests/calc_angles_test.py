@@ -13,14 +13,18 @@ uni = get_universe(gro_file, traj_file)
 
 def test_pa():
 
+    # Methodology taken from Beckstein
+    # https://stackoverflow.com/questions/49239475/
+    # how-to-use-mdanalysis-to-principal-axes-and-moment-of-inertia-with-a-group-of-at/49268247#49268247
+
     sel = "name CA and resid 1:123"
     uni = get_universe(gro_file, traj_file)
     
     CA = uni.select_atoms(sel)
     I = CA.moment_of_inertia()
 
-    pa = get_principal_axes(uni, sel)
+    U = get_principal_axes(uni, sel)
 
-    Lambda = pa.T.dot(I.dot(U))
+    Lambda = U.T.dot(I.dot(U))
     
     assert np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0)
