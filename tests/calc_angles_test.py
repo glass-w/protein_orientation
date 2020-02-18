@@ -1,5 +1,5 @@
 from orientation.setup_system import get_universe
-from orientation.calc_angles import get_com, get_principal_axes
+from orientation.calc_angles import get_com, get_principal_axes, dir_cosine
 
 import MDAnalysis as mda
 import numpy as np
@@ -40,4 +40,15 @@ def test_pa():
     Lambda = U.T.dot(I.dot(U))
     
     assert np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0)
+
+def test_dir_cosine():
+
+    v1 = np.array([0,0,1])
+    v2 = np.array([0,1,0])
+
+    # gives dot prod 
+    dc = dir_cosine(v1, v2)
+
+
+    assert dc == 0.0
 
