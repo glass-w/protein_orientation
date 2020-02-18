@@ -20,7 +20,7 @@ def test_get_com():
 
     com = get_com(uni, sel)
 
-    assert (ref_com==com).all()
+    assert np.allclose(ref_com, com)
 
 
 def test_pa():
