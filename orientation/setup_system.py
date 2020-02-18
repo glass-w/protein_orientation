@@ -1,7 +1,7 @@
 import MDAnalysis as mda
 import numpy as np
 
-def get_universe(gro_file, *traj_file):
+def get_universe(gro_file, traj_file=None):
 
     ''' Load an MDAnalysis universe '''
 
