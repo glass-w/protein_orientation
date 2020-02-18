@@ -40,3 +40,4 @@ def test_pa():
     Lambda = U.T.dot(I.dot(U))
     
     assert np.allclose(Lambda - np.diag(np.diagonal(Lambda)), 0)
+
