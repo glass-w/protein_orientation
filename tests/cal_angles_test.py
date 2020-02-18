@@ -1,5 +1,5 @@
-from protein_orientation.setup_system import get_universe
-from protein_orientation.calc_angles import get_principal_axes
+from orientation.setup_system import get_universe
+from orientation.calc_angles import get_principal_axes
 
 import MDAnalysis as mda
 import numpy as np
