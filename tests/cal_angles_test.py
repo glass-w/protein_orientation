@@ -3,6 +3,7 @@ from orientation.calc_angles import get_principal_axes
 
 import MDAnalysis as mda
 import numpy as np
+import os
 
 sel = "name CA and resid 1:123"
 uni = get_universe('./data/b3_syst_protein_only.gro')
