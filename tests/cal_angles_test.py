@@ -6,12 +6,12 @@ import numpy as np
 import os
 
 sel = "name CA and resid 1:123"
-uni = get_universe('./data/b3_syst_protein_only.gro')
+uni = get_universe('data/b3_syst_protein_only.gro')
 
 def test_pa():
 
     sel = "name CA and resid 1:123"
-    uni = get_universe('./data/b3_syst_protein_only.gro')
+    uni = get_universe('data/b3_syst_protein_only.gro')
     
     CA = uni.select_atoms(sel)
     I = CA.moment_of_inertia()
