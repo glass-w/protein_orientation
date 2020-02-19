@@ -84,7 +84,7 @@ def make_direction_cosine_matrix(ref, axes_set):
     w_gamma = dir_cosine(w, ez)
 
     # make all of the above into a 3 X 3 matrix and return it 
-    c_matrix = np.matrix([[u_alpha, u_beta, u_gamma],
+    c_matrix = np.asarray([[u_alpha, u_beta, u_gamma],
                           [v_alpha, v_beta, v_gamma],
                           [w_alpha, w_beta, w_gamma]])                       
 

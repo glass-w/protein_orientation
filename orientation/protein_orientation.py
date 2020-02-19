@@ -14,7 +14,7 @@ import sys
 
 # import functions from own modules
 from setup_system import get_universe, read_stride
-from calc_angles import get_com, dir_cosine, make_direction_cosine_matrix, get_principal_axes
+from calc_angles import get_com, make_direction_cosine_matrix, get_principal_axes
 from settings import scale_factor, cut_off
 from visuals import vis_axes
 

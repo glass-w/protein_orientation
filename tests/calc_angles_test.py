@@ -1,5 +1,5 @@
 from orientation.setup_system import get_universe
-from orientation.calc_angles import get_com, get_principal_axes, dir_cosine
+from orientation.calc_angles import get_com, get_principal_axes, dir_cosine, make_direction_cosine_matrix
 
 import MDAnalysis as mda
 import numpy as np
@@ -52,3 +52,16 @@ def test_dir_cosine():
 
     assert dc == 0.0
 
+def test_make_direction_cosine_matrix():
+
+    ref_array = np.array([[1,0,0], [0,1,0], [0,0,1]])
+
+    axes = np.array([[1,0,0], [0,1,0], [0,0,1]])
+
+    CM = make_direction_cosine_matrix(ref_array, axes)
+
+    # convert matrix to array for assertion
+    #CM = np.asarray(CM)
+
+    # assert shape and that CM is an identity matrix (for these orthogonal vectors)
+    assert (CM.shape[0] == CM.shape[1]) and (CM == np.eye(CM.shape[0])).all()
