@@ -246,65 +246,9 @@ def run_multiple(universe_files, protein_info, skip_val, calc_method, vector_sel
         np.save(output_file_name +'_euler_angles.npy', np.array(euler_angle_store))
 
 
-def write_out(current_pitch_angle, current_roll_angle, angle_list, system, out_file_name, current_frame):
-    ''' This is primarily for if the user wants to write out .gro files (i.e. snapshots) if the angles calcualted are between 
-    a certain min and max value '''
+if __name__ == "__main__":
 
-    print("angle list: ", angle_list)
-
-    # Make dict of supplied angle list to check what calculations we want to perform
-    angles_to_calc = {'pitch_min': angle_list[0], 'pitch_max': angle_list[1],
-                      'roll_min': angle_list[2], 'roll_max': angle_list[3]}
-
-    # Run through the user supplied list of angles and update our dict with the values, converted from a string
-    for i, angle in enumerate(angles_to_calc):
-
-        try:
-            float(angle_list[i])
-
-        except ValueError:
-
-            angles_to_calc[angle] = None
-
-        else:
-            angles_to_calc[angle] = float(angle_list[i])
-
-    prot = system.select_atoms("protein")
-    lipid = system.select_atoms("resname POPC")
-    prot_lipid = prot + lipid
-
-    #print("ANGLES TO CALC: ", angles_to_calc)
-
-    if (angles_to_calc['roll_min'] and angles_to_calc['roll_max']) is not None: # Only want to analyse roll
-
-        #print("CURRENT ANGLE: ", np.rad2deg(current_roll_angle))
-
-        if angles_to_calc['roll_min'] <= np.rad2deg(current_roll_angle) <= angles_to_calc['roll_max']:
-
-            prot_lipid.write(str(out_file_name) + "_prot_rep_struc_frame" + str(current_frame) + "_roll_range" +
-                             ".gro")
-
-    elif (angles_to_calc['pitch_min'] and angles_to_calc['pitch_max']) is not None: # Only want to analyse pitch
-
-        #print("CURRENT ANGLE: ", np.rad2deg(current_pitch_angle))
-
-        if angles_to_calc['pitch_min'] <= np.rad2deg(current_roll_angle) <= angles_to_calc['pitch_max']:
-
-            prot_lipid.write(str(out_file_name) + "_prot_rep_struc_frame" + str(current_frame) + "_pitch_range" +
-                             ".gro")
-
-    else: # Write out when both the pitch and roll parameters are satisfied
-
-        print(angles_to_calc)
-
-        if angles_to_calc['pitch_min'] <= np.rad2deg(current_pitch_angle) <= angles_to_calc['pitch_max'] \
-                and angles_to_calc['roll_min'] <= np.rad2deg(current_roll_angle) <= angles_to_calc['roll_max']:
-
-            prot_lipid.write(str(out_file_name) + "_prot_rep_struc_frame" + str(current_frame) + "_pitch_and_roll_range"
-                                                                                                 + ".gro")
-
-
-def init_parser():
+    def init_parser():
 
     ''' Gather all of the relevant user information '''
 
@@ -369,9 +313,6 @@ def init_parser():
                                 In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
 
     return parser.parse_args()
-
-
-if __name__ == "__main__":
 
     # Get the users options
     options = init_parser()
