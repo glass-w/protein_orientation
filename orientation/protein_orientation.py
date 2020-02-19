@@ -246,9 +246,7 @@ def run_multiple(universe_files, protein_info, skip_val, calc_method, vector_sel
         np.save(output_file_name +'_euler_angles.npy', np.array(euler_angle_store))
 
 
-if __name__ == "__main__":
-
-    def init_parser():
+def init_parser():
 
     ''' Gather all of the relevant user information '''
 
@@ -313,6 +311,9 @@ if __name__ == "__main__":
                                 In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
 
     return parser.parse_args()
+
+
+if __name__ == "__main__":
 
     # Get the users options
     options = init_parser()
