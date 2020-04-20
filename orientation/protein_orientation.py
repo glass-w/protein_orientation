@@ -15,7 +15,6 @@ import sys
 # import functions from own modules
 from setup_system import get_universe, read_stride
 from calc_angles import get_com, make_direction_cosine_matrix, get_principal_axes
-from settings import scale_factor, cut_off
 from visuals import vis_axes
 
 # Print Versions
@@ -66,7 +65,7 @@ def run_single(universe_files, protein_info, calc_method, vector_sel_resids):
     vis_axes(vis='vmd', axes_data=[ax1, ax2, ax3], center=center, name=output_file_name)
 
 
-def run_multiple(universe_files, protein_info, skip_val, calc_method, vector_sel_resids, states, run, cut_off, ref_option, ref_basis):
+def run_multiple(universe_files, protein_info, skip_val, calc_method, vector_sel_resids, states, run, ref_option, ref_basis):
 
     euler_angle_store = []
 
@@ -392,7 +391,6 @@ if __name__ == "__main__":
                             vector_sel_resids=options.res_vector_sel,
                             states=None,
                             run=i,
-                            cut_off=cut_off,
                             ref_option=options.ref_option,
                             ref_basis=options.ref_basis) for i, system in enumerate(systems))
 
