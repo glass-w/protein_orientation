@@ -326,8 +326,8 @@ if __name__ == "__main__":
     ######################################################
 
     # Get the start and end of the protein based on the users selection for the centre of mass
-    start_of_protein_sel = int(options.com_selection.split()[-1].split(':')[0])
-    end_of_protein_sel = int(options.com_selection.split()[-1].split(':')[1])
+    start_of_protein = int(options.com_selection.split()[-1].split(':')[0])
+    end_of_protein = int(options.com_selection.split()[-1].split(':')[1])
 
     # Load a temp universe, this is to get resids and protein lengths etc to be used in the main loop
     # We assume that the user is analysing multiple repeats of the SAME system i.e. multiple MD runs
@@ -340,7 +340,7 @@ if __name__ == "__main__":
         temp_universe.select_atoms("resid " + str(start_of_protein) + ":" + str(end_of_protein) + " and name CA"))
 
     # Initialise dictionary that holds information for protein (resids and angles)
-    protein_info = read_stride(stride_file=options.stride_file, protein_sel_length=int(prot_length), sec_struc_choice=options.sec_struc_choice)
+    protein_info = read_stride(stride_file=options.stride_file, protein_sel_length=int(prot_sel_length), sec_struc_choice=options.sec_struc_choice)
 
     #####################
     ##                 ##

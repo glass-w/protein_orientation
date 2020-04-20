@@ -5,7 +5,7 @@ def get_universe(gro_file, traj_file=None):
 
     ''' Load an MDAnalysis universe '''
 
-    print(gro_file, traj_file)
+    # print(gro_file, traj_file)
 
     if traj_file != None:
 
@@ -18,7 +18,7 @@ def get_universe(gro_file, traj_file=None):
     return u
 
 
-def read_stride(stride_file, protein_length, sec_struc_choice):
+def read_stride(stride_file, protein_sel_length, sec_struc_choice):
     '''
     This reads the output from running stride structure.pdb, this is used to identify beta sheets and alpha
     helices. Due to flexible loops the calculated principal axes can differ so using more stable regions can give
@@ -40,7 +40,7 @@ def read_stride(stride_file, protein_length, sec_struc_choice):
     # make a list of the types of secondary structure to include, this is done by referencing sec_struc_dict to get the one letter code as defined by / in the supplied stride file
     sec_struc_list = [sec_struc_dict[sec_feature] for sec_feature in choices]
 
-    print(sec_struc_list)
+    # print(sec_struc_list)
 
     # Populate resid_list with the list of residues to use for the main calculation - done with reference to the secondary structure (i.e. ignore flexible loop regions)
     with open(stride_file) as f:
@@ -55,7 +55,7 @@ def read_stride(stride_file, protein_length, sec_struc_choice):
     # Make the dictionary with the relevant resids and empty lists to store the Euler angles later for each protein in the system
     protein_dict = {'resids': [],'angle_pa1': [],'angle_pa2': [],'angle_pa3': []}
     
-    protein_dict['resids'] = [t for t in resid_list if 1 <= t <= protein_length]
+    protein_dict['resids'] = [t for t in resid_list if 1 <= t <= protein_sel_length]
 
     #     # Need to test below works on a multi chain system
     #     else:

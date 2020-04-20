@@ -98,3 +98,9 @@ optional arguments:
                         separated and have no whitespace between them. e.g.
                         strand,310helix
 ```
+
+## Example usage
+
+```text
+python protein_orientation.py -c gro_file_list.txt -f xtc_file_list.txt -com_sel 1:123 -n 1 -method user_pa -res_vector_sel 102,69,5 -stride stride_file.txt -nprocs 10 -skip 10 -ref_option standard -sec_struc_choice sec_struc.txt
+```
