@@ -286,7 +286,10 @@ def init_parser():
 			            help="Number of processes to use, default=1.")
 
     parser.add_argument("-ref_option", dest="ref_option", type=str, default="standard",
-			            help="Choice of what basis of vectors to use as a reference, from which the Euler angles will be calcualted. Permitted chocies are: 'first_frame', angles will be calculated in reference to the PAs calculated in the first frame. 'user', angles will be calculated in reference to a user defined set of vectors. 'standard' where the standard is x, y, z = [1,0,0], [0,1,0], [0,0,1]. default = 'standard'.")
+			            help="Choice of what basis of vectors to use as a reference, from which the Euler angles will be calcualted. Permitted chocies are: 'first_frame', angles will be calculated in reference to the PAs calculated in the first frame. 'user', angles will be calculated in reference to a user defined set of vectors. 'standard' (recommended) where the standard is x, y, z = [1,0,0], [0,1,0], [0,0,1]. default = 'standard'.")
+
+    parser.add_argument("-ref_basis", dest="ref_basis", type=str,
+                        help="To be used in combination with 'user' if used (see -ref_option). The basis vectors to be used as a reference, if not passed the default will be used (see -ref_option). This should be a .txt file with the x, y, z coordinates on each line.")
 
     parser.add_argument("-sec_struc_choice", dest="sec_struc_choice", default=['strand', '310helix', 'alphahelix'],
 			            help="A file containing the choice of secondary structure to use in the calculation of the centre of mass. If using the 'user_pa' method (see -method) this option must be supplied. Valid choices include: 'strand', '310helix', or 'alphahelix'. In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
