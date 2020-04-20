@@ -253,61 +253,44 @@ def init_parser():
         description="Calculates the orientation of a user defined region of a protein")
 
     parser.add_argument("-c", dest="gro_file_list", required=True,
-                        help='The list of coordinate files [.gro], this takes the form of a text file\
-                            each coordinate file must start on a new line.')
+                        help="The list of coordinate files [.gro], this takes the form of a text file with each file location starting on a new line.")
 
     parser.add_argument("-f", dest="xtc_file_list", required=True,
-                        help='A list of corrected trajectory files: pbc artifacts removed, no jumping across PBC,\
-                             this is a text file. Each trajectory file must start on a new line. Additionally each trajectory \
-                                 is assumed to correspond to the equivalent line in the gro_file_list file!')
+                        help='The list of corrected trajectory files: pbc artifacts removed, no jumping across PBC. This takes the form of a text file with each file location starting on a new line.')
 
     parser.add_argument("-com_sel", dest="com_selection", type=str, required=True,
-                        help='The range of resids to use for centre of mass calculation,\
-                            in the form of A:B, where A and B are integers')
-
-    parser.add_argument("-n", dest="num_of_proteins", type=int, required=True,
-                        help='The number of protein copies in the system')
-
-    parser.add_argument("-skip", dest="skip", type=int, default=1,
-                        help="Optional: The number of frames to skip")
-
-    parser.add_argument("-vtraj", dest="vector_traj", type=bool, default=False,
-                        help="Optional: Set to True if you want a trajectory of the vectors")
+                        help='The range of resids to use for centre of mass calculation, in the form of A:B, where A and B are integers.')
 
     parser.add_argument("-method", dest="method", type=str, default="user_pa",
-                        help="The vectors can be calculated by 1) a set of user defined vectors based on the centre of\
-                            mass of the main selection and the CA of a specified residue OR 2) the method can be used in\
-                            combination with (1) and use the principal axes of inertia. In either (1) or (2) the user\
-                            must define a set of vectors that roughly correspond to the principal axes - this ensures\
-                            that when calculated they always point in the direction specified by the user's vectors\
-                            Options: 'user' 'user_pa'")
+			            help="The vectors can be calculated by 1) a set of user defined vectors based on the centre of mass of the main selection and the alpha carbon (CA) of a specified residue OR 2) the method can be used in combination with (1) and use the principal axes of inertia. In either (1) or (2) the user must define a set of vectors that roughly correspond to the principal axes - this ensures that when calculated they always point in the direction specified by the users vectors. Options: user or user_pa. Default = user_pa")
+
+    parser.add_argument("-n", dest="num_of_proteins", type=int, required=True,
+                        help='Number of protein copies in the system, default 1.')
+
+    parser.add_argument("-skip", dest="skip", type=int, default=1,
+                        help="The number of frames to skip, default 1.")
+
+    parser.add_argument("-vtraj", dest="vector_traj", type=bool, default=False,
+                        help="Set to True if you want a trajectory of the vectors, default False.")
+
 
     parser.add_argument("-res_vector_sel", dest="res_vector_sel", type=str, default=None,
-                        help="The resids of the residues to use for the roll, pitch, and yaw calculation in the form\
-                            A, B, C.")
+                        help="The resids of the residues to use for the roll, pitch, and yaw calculation respectively: in the form A, B, C.")
 
     parser.add_argument("-stride", dest="stride_file", type=str,
-                        help="the name of the stride file to read, a .txt file.\
-                            This will be used in combination with the -com_sel selection\
-                                to only choose those residues involved in secondary structure.")
+			            help="The name of the stride file to read, a .txt file. This will be used in combination with the -com_sel selection to only choose those residues involved in secondary structure. If using the 'user_pa' method (see -method) this option must be supplied.")
 
     parser.add_argument("-pa_only", dest="pa_single", type=bool,
-                        help="If set to True a principal component calculation will be carried out and written to a\
-                            .pdb file, this is to help in selecting the appropriate residues for a run.")
+                        help="If set to True a principal component calculation will be carried out and written to a .pdb file, this is to help in selecting the appropriate residues for a run. Default False")
 
     parser.add_argument("-nprocs", dest="nprocs", type=int, default=1,
-                        help="No. or processes to use, usually set to the number of repeats you have.\
-                            Max = max No. of CPUs available to you")
+			            help="Number of processes to use, default=1.")
 
     parser.add_argument("-ref_option", dest="ref_option", type=str, default="standard",
-                        help="Choice of what basis of vectors to use as a reference, from which the Euler angles\
-                            will be calcualted. Permitted chocies are: 'first_frame', 'user' or 'standard' \
-                                where standard is x, y, z = [1,0,0], [0,1,0], [0,0,1].")        
+			            help="Choice of what basis of vectors to use as a reference, from which the Euler angles will be calcualted. Permitted chocies are: 'first_frame', angles will be calculated in reference to the PAs calculated in the first frame. 'user', angles will be calculated in reference to a user defined set of vectors. 'standard' where the standard is x, y, z = [1,0,0], [0,1,0], [0,0,1]. default = 'standard'.")
 
     parser.add_argument("-sec_struc_choice", dest="sec_struc_choice", default=['strand', '310helix', 'alphahelix'],
-                        help="A file containing the choice of secondary srtucture to use in the calculation of the centre of mass.\
-                            Valid choices include: strand, 310helix, or alphahelix.\
-                                In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
+			            help="A file containing the choice of secondary structure to use in the calculation of the centre of mass. If using the 'user_pa' method (see -method) this option must be supplied. Valid choices include: 'strand', '310helix', or 'alphahelix'. In the file these must be comma separated and have no whitespace between them. e.g. strand,310helix")
 
     return parser.parse_args()
 
