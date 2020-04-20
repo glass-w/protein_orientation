@@ -9,15 +9,15 @@ python protein_orientation.py -h
 ```
 
 ```text
-usage: protein_orientation.py [-h] [-c GRO_FILE_LIST] [-f XTC_FILE_LIST]
-                              [-com_sel COM_SELECTION] [-n NUM_OF_PROTEINS]
-                              [-skip SKIP] [-vtraj VECTOR_TRAJ]
-                              [-method METHOD]
-                              [-res_vector_sel RES_VECTOR_SEL]
-                              [-stride STRIDE_FILE] [-pa_only PA_SINGLE]
-                              [-nprocs NPROCS] [-ref_option REF_OPTION]
-                              [-ref_basis REF_BASIS]
-                              [-sec_struc_choice SEC_STRUC_CHOICE]
+usage: protein_orientation.py [-h] [-c] [-f]
+                              [-com_sel] [-n]
+                              [-skip] [-vtraj]
+                              [-method]
+                              [-res_vector_sel]
+                              [-stride] [-pa_only]
+                              [-nprocs] [-ref_option]
+                              [-ref_basis]
+                              [-sec_struc_choice]
 
 optional arguments:
   -h, --help            show this help message and exit
