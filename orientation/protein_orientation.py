@@ -261,7 +261,7 @@ def init_parser():
     parser.add_argument("-com_sel", dest="com_selection", type=str, required=True,
                         help='The range of resids to use for centre of mass calculation, in the form of A:B, where A and B are integers.')
 
-    parser.add_argument("-method", dest="method", type=str, default="user_pa",
+    parser.add_argument("-method", dest="method", type=str, required=True, default="user_pa",
 			            help="The vectors can be calculated by 1) a set of user defined vectors based on the centre of mass of the main selection and the alpha carbon (CA) of a specified residue OR 2) the method can be used in combination with (1) and use the principal axes of inertia. In either (1) or (2) the user must define a set of vectors that roughly correspond to the principal axes - this ensures that when calculated they always point in the direction specified by the users vectors. Options: user or user_pa. Default = user_pa")
 
     parser.add_argument("-n", dest="num_of_proteins", type=int, required=True,
@@ -272,7 +272,6 @@ def init_parser():
 
     parser.add_argument("-vtraj", dest="vector_traj", type=bool, default=False,
                         help="Set to True if you want a trajectory of the vectors, default False.")
-
 
     parser.add_argument("-res_vector_sel", dest="res_vector_sel", type=str, default=None,
                         help="The resids of the residues to use for the roll, pitch, and yaw calculation respectively: in the form A, B, C.")
