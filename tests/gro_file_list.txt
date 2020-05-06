@@ -1,2 +1,0 @@
-../data/b3_syst_protein_only.gro
-../data/b3_syst_protein_only.gro

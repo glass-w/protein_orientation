@@ -1,0 +1,7 @@
+MDAnalysis
+numpy
+scipy
+
+pytest
+pytest-cov
+codecov

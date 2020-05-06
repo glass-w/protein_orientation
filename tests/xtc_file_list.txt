@@ -1,2 +1,0 @@
-../data/b3_frm_human_b1_r0_400ns_noPBCWhole_noJump_Center_SKIP10.xtc
-../data/b3_frm_human_b1_r1_400ns_noPBCWhole_noJump_Center_SKIP10.xtc
