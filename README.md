@@ -104,3 +104,11 @@ optional arguments:
 ```text
 python protein_orientation.py -c gro_file_list.txt -f xtc_file_list.txt -com_sel 1:123 -n 1 -method user_pa -res_vector_sel 102,69,5 -stride stride_file.txt -nprocs 10 -skip 10 -ref_option standard -sec_struc_choice sec_struc.txt
 ```
+
+Thanks
+------
+Thanks go to Rocco Meli, Aphroditi Zaki, and Irfan Alibay for mathematical discussions and support in code development.
+
+Notes
+-----
+* This code was used to calculate protein orientation in [this publication](https://www.frontiersin.org/articles/10.3389/fmolb.2020.00040/full).
