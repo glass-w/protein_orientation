@@ -1,7 +1,11 @@
 [![Build Status](https://travis-ci.org/WG150/protein_orientation.svg?branch=refactor)](https://travis-ci.org/WG150/protein_orientation)
 [![codecov](https://codecov.io/gh/WG150/protein_orientation/branch/refactor/graph/badge.svg)](https://codecov.io/gh/WG150/protein_orientation)
 
-protein_orientation
+protein_orientation.py is a script to analyse the pitch of a protein region over the course of a molecular dynamics simulation. 
+
+## Note
+
+Although this script has been made available it has only been tested for biomolecular systems specific to one research project. As a result the code **is not guarenteed to work with all systems and / or provide the correct result**. Please use this code at your own risk. Please raise any issues you encounter and contribute if you can.  
 
 ## Usage
   
