@@ -5,7 +5,7 @@ protein_orientation.py is a script to analyse the pitch of a protein region over
 
 ## Note
 
-Although this script has been made available it has only been tested for biomolecular systems specific to one research project. As a result the code **is not guarenteed to work with all systems and / or provide the correct result**. Please use this code at your own risk. Please raise any issues you encounter and contribute if you can.  
+Although this script has been made available it has only been tested for biomolecular systems specific to one research project. As a result the code **is not guaranteed to work with all systems and / or provide the correct result**. Please use this code at your own risk. Please raise any issues you encounter and contribute if you can.  
 
 ## Usage
   
