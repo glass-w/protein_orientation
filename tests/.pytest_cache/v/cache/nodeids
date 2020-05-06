@@ -1,1 +1,4 @@
-[]
+[
+  "visuals_test.py::test_vis_axes_vmd",
+  "visuals_test.py::test_vis_axes_pymol"
+]

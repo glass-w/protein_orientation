@@ -109,6 +109,14 @@ optional arguments:
 python orientation/protein_orientation.py -c data/gro_file_list.txt -f data/xtc_file_list.txt -com_sel 1:123 -n 1 -method user_pa -res_vector_sel 102,69,5 -stride data/beta3_stride_file.txt -nprocs 2 -skip 10 -ref_option standard -sec_struc_choice data/sec_struc.txt
 ```
 
+Tests
+------
+If you would like to run written tests and / or calculate code coverage use the following commands:
+```text
+python -m pytest ./
+python -m pytest --cov=./
+```
+
 Thanks
 ------
 Thanks go to Rocco Meli, Aphroditi Zaki, and Irfan Alibay for mathematical discussions and support in code development.
