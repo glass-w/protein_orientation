@@ -2,6 +2,7 @@ MDAnalysis
 numpy
 scipy
 
+flake8
 pytest
 pytest-cov
 codecov
