@@ -16,7 +16,7 @@ install:
 
 script:
     - pytest --cov=./
-
+    - flake8
 
 after_success:
     - codecov
