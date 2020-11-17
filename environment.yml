@@ -1,4 +1,4 @@
-name: py36_mda
+name: protein_orientation
 channels:
   - conda-forge
   - bioconda
@@ -60,7 +60,7 @@ dependencies:
   - pyparsing=2.4.7=pyh9f0ad1d_0
   - pytest=5.4.1=py36h9f0ad1d_0
   - pytest-cov=2.8.1=py_0
-  - python=3.6.10=h4334963_1010_cpython
+  - python=3.6.10
   - python-dateutil=2.8.1=py_0
   - python_abi=3.6=1_cp36m
   - pytz=2019.3=py_0
@@ -79,5 +79,3 @@ dependencies:
   - xz=5.2.5=h0b31af3_0
   - zipp=3.1.0=py_0
   - zlib=1.2.11=h0b31af3_1006
-prefix: /Users/williamglass/opt/anaconda3/envs/py36_mda
-
