@@ -57,7 +57,7 @@ dependencies:
   - pip=20.0.2=py_2
   - pluggy=0.13.1=py36h9f0ad1d_1
   - py=1.8.1=py_0
-  - pyparsing=2.4.7=pyh9f0ad1d_0
+  - pyparsing=2.4.7
   - pytest=5.4.1=py36h9f0ad1d_0
   - pytest-cov=2.8.1=py_0
   - python=3.6.10
