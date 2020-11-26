@@ -1,8 +1,9 @@
 scale_factor = 20
 
+
 def vis_axes(vis, axes_data, center, name):
 
-    ''' 
+    '''
     Visualise the principal axes being used for the calculation.
 
     vis : the format to write the axes out as (either 'vmd' or 'pymol')
@@ -20,26 +21,28 @@ def vis_axes(vis, axes_data, center, name):
         output = open(str(name) + '_pa_vectors.pdb', 'a')
 
         for i in range(0, (3 * scale_factor)):
-            tmp = "ATOM    {0:3d}  CA  ALA A {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}  1.00  0.00\n".format(i, i, center[0] + (axis1[0] * i),
-                                                                                                    center[1] + (axis1[1] * i),
-                                                                                                    center[2] + (axis1[2] * i))
+            tmp = "ATOM    {0:3d}  CA  ALA A {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}\
+                  1.00  0.00\n".format(i, i, center[0] + (axis1[0] * i),
+                                       center[1] + (axis1[1] * i),
+                                       center[2] + (axis1[2] * i))
             output.write(tmp)
 
         output.write("TER\n")
 
         for j in range(0, (2 * scale_factor)):
-            tmp2 = "ATOM    {0:3d}  CA  ALA B {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}  1.00  0.00\n".format(j, j, center[0] + (axis2[0] * j),
-                                                                                                    center[1] + (axis2[1] * j),
-                                                                                                    center[2] + (axis2[2] * j))
+            tmp2 = "ATOM    {0:3d}  CA  ALA B {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}\
+                  1.00  0.00\n".format(j, j, center[0] + (axis2[0] * j),
+                                       center[1] + (axis2[1] * j),
+                                       center[2] + (axis2[2] * j))
             output.write(tmp2)
 
         output.write("TER\n")
 
-
         for k in range(0, (1 * scale_factor)):
-            tmp3 = "ATOM    {0:3d}  CA  ALA C {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}  1.00  0.00\n".format(k, k, center[0] + (axis3[0] * k),
-                                                                                                    center[1] + (axis3[1] * k),
-                                                                                                    center[2] + (axis3[2] * k))
+            tmp3 = "ATOM    {0:3d}  CA  ALA C {1:3d}    {2:8.3f}{3:8.3f}{4:8.3f}\
+                  1.00  0.00\n".format(k, k, center[0] + (axis3[0] * k),
+                                       center[1] + (axis3[1] * k),
+                                       center[2] + (axis3[2] * k))
             output.write(tmp3)
 
         output.write("TER\nENDMDL\n")
@@ -60,7 +63,7 @@ def vis_axes(vis, axes_data, center, name):
         # the small vector is the third principal axis
         point3 = 1 * scale_factor * axis3 + center
 
-        #pymol_name = pdb_name.replace(".pdb", "_axes.pml")
+        # pymol_name = pdb_name.replace(".pdb", "_axes.pml")
 
         pymol_name = (name + "_pa_vectors.pml")
         with open(pymol_name, "w") as pymol_file:
@@ -77,10 +80,13 @@ def vis_axes(vis, axes_data, center, name):
                 cmd.load_cgo(axis2, 'axis2')
                 cmd.load_cgo(axis3, 'axis3')
                 cmd.set('cgo_line_width', 4)
-                """ % ( \
-                    center[0], center[1], center[2], point1[0], point1[1], point1[2], \
-                    center[0], center[1], center[2], point2[0], point2[1], point2[2], \
-                    center[0], center[1], center[2], point3[0], point3[1], point3[2]))
+                """ % (
+                    center[0], center[1], center[2], point1[0],
+                    point1[1], point1[2],
+                    center[0], center[1], center[2], point2[0],
+                    point2[1], point2[2],
+                    center[0], center[1], center[2], point3[0],
+                    point3[1], point3[2]))
 
         # --------------------------------------------------------------------------
         # create .pml script for nice rendering in Pymol
